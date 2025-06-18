@@ -11,7 +11,7 @@ is_dev = True
 app = Flask(__name__)
 if is_dev:
     print('\n🟢\t[DESAROLLO] - MDW | API-GIS\n')
-    CORS(app, resources={r"/*": {"origins": "http://127.0.0.2:81"}}) # En desarrollo.
+    CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}) # En desarrollo.
 else:
     #CORS(app, supports_credentials=True, resources={r"/*": {"origins": ["http://209.45.78.210"]}}) # En producción.
     CORS(app)
@@ -42,6 +42,12 @@ class Lotes(db.Model):
     id_lote = db.Column(db.String)
     geom = db.Column(Geometry(geometry_type='POLYGON', srid=32719))
 
+@app.route('/')
+def inicio():
+    if is_dev:
+        return "🟢 [DESAROLLO] - MDW | API-GIS"
+    else: 
+        return "🟢 MDW | API-GIS"
 
 @app.route('/subir_shapefile', methods=['POST'])
 def subir_shapefile():
@@ -175,9 +181,9 @@ def insertar_datos():
 
 if __name__ == "__main__":
     app.run(
-        port=5000,
+        port=5001 if is_dev else 81,
         debug=True,
-        host='127.0.0.2' if is_dev else '209.45.78.210',
+        host='0.0.0.0' if is_dev else '192.168.1.16',
         use_reloader=True,
         threaded=True
     )
