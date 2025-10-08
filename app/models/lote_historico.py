@@ -5,11 +5,11 @@ from geoalchemy2 import Geometry
 from app.extensions import db
 
 
-class Lote_historico(db.Model):
-    __tablename__ = "th_lote"
+class LoteHistorico(db.Model):
+    __tablename__ = "tgh_lote"
     __table_args__ = {"schema": "geo"}
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     gid = db.Column(db.Integer)
     cod_sector = db.Column(db.String(2))
     id_ubigeo = db.Column(db.String(6))

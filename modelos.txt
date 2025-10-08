@@ -1,0 +1,5 @@
+flask --app app db init
+
+flask --app app db migrate -m "creando las tablas"
+
+flask --app app db upgrade

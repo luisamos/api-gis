@@ -1,13 +1,17 @@
+from sqlalchemy import Sequence
 from geoalchemy2 import Geometry
-
 from app.extensions import db
-
 
 class Lote(db.Model):
     __tablename__ = "tg_lote"
     __table_args__ = {"schema": "geo"}
 
-    gid = db.Column(db.Integer, primary_key=True)
+    gid = db.Column(
+        db.Integer,
+        Sequence("tg_lote_gid_seq", schema="geo"),
+        primary_key=True,
+        autoincrement=True,
+    )
     cod_sector = db.Column(db.String(2))
     id_ubigeo = db.Column(db.String(6))
     id_sector = db.Column(db.String(8))

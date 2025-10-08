@@ -1,4 +1,4 @@
 from .lote import Lote
-from .historico_lote import Lote_historico
+from .lote_historico import LoteHistorico
 
-__all__ = ["Lote", "Lote_historico"]
+__all__ = ["Lote", "LoteHistorico"]

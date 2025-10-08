@@ -1,15 +1,17 @@
+import json
 import shutil
 import zipfile
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 from flask import Blueprint, current_app, jsonify, request
 from osgeo import ogr
 from sqlalchemy import select
 
 from app.extensions import db
-from app.models import Lote_historico, Lote
+from app.models import Lote, LoteHistorico
 
 ogr.UseExceptions()
 
@@ -48,110 +50,83 @@ def _find_field(layer, target_name: str) -> Optional[str]:
     return None
 
 
+def _validate_field_lengths(layer, field_map: Dict[str, str]) -> Dict[str, list]:
+    errores = {"cod_sector": [], "cod_mzna": [], "cod_lote": []}
+
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    index = 1
+    while feature is not None:
+        sector_val = (feature.GetField(field_map["cod_sector"]) or "").strip()
+        mzna_val = (feature.GetField(field_map["cod_mzna"]) or "").strip()
+        lote_val = (feature.GetField(field_map["cod_lote"]) or "").strip()
+
+        if len(sector_val) != 2 or not sector_val.isdigit():
+            errores["cod_sector"].append(index)
+        if len(mzna_val) != 3 or not mzna_val.isdigit():
+            errores["cod_mzna"].append(index)
+        if len(lote_val) != 3 or not lote_val.isdigit():
+            errores["cod_lote"].append(index)
+
+        feature = layer.GetNextFeature()
+        index += 1
+
+    return errores
+
+
+def _geometry_is_polygon(layer) -> bool:
+    geom_type = layer.GetGeomType()
+    geom_name = ogr.GeometryTypeToName(geom_type) or ""
+    return "POLYGON" in geom_name.upper()
+
+
+def _get_layer_srid(layer) -> Optional[str]:
+    spatial_ref = layer.GetSpatialRef()
+    if spatial_ref is None:
+        return None
+    authority_name = spatial_ref.GetAuthorityName(None)
+    authority_code = spatial_ref.GetAuthorityCode(None)
+    if authority_name and authority_code:
+        return authority_code
+    return None
+
+
 @lotes_bp.route("/subir_shapefile", methods=["POST"])
 def subir_shapefile():
     file = request.files.get("file")
-    user_id = request.form.get("idUsuario")
-
-    if not file or not file.filename.endswith(".zip"):
+    if not file or not file.filename.lower().endswith(".zip"):
         return jsonify({"estado": False, "mensaje": "Archivo inválido"}), 400
-
-    if not user_id:
-        return jsonify({
-            "estado": False,
-            "mensaje": "El identificador del usuario es obligatorio para procesar el histórico",
-        }), 400
-
-    try:
-        user_id = int(user_id)
-    except (TypeError, ValueError):
-        return jsonify({
-            "estado": False,
-            "mensaje": "El identificador del usuario debe ser numérico",
-        }), 400
 
     tmp_dir = Path(current_app.config["TMP_DIR"])
     uploads_dir = Path(current_app.config["UPLOADS_DIR"])
+
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    uploads_dir.mkdir(parents=True, exist_ok=True)
 
     _clear_directory(tmp_dir)
 
     zip_path = tmp_dir / file.filename
     file.save(zip_path)
 
-    with zipfile.ZipFile(zip_path, "r") as zip_ref:
-        zip_ref.extractall(tmp_dir)
+    try:
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(tmp_dir)
+    except zipfile.BadZipFile:
+        zip_path.unlink(missing_ok=True)
+        _clear_directory(tmp_dir)
+        return jsonify({"estado": False, "mensaje": "El archivo ZIP está corrupto"}), 400
 
     zip_path.unlink(missing_ok=True)
 
     shapefile_path = _find_shapefile(tmp_dir)
     if shapefile_path is None:
-        return jsonify({
-            "estado": False,
-            "mensaje": "No se encontró un archivo .shp válido en el comprimido",
-        }), 404
-
-    datasource = ogr.Open(str(shapefile_path))
-    if datasource is None:
-        return jsonify({
-            "estado": False,
-            "mensaje": f"No se pudo abrir el archivo Shapefile: {shapefile_path.name}",
-        }), 500
-
-    layer = datasource.GetLayer()
-    if layer is None:
-        datasource = None
-        return jsonify({
-            "estado": False,
-            "mensaje": "El archivo Shapefile no contiene capas válidas",
-        }), 500
-
-    field_name = _find_field(layer, "cod_sector")
-    if field_name is None:
-        layer = None
-        datasource = None
-        return jsonify({
-            "estado": False,
-            "mensaje": "El archivo Shapefile no tiene el campo 'cod_sector'",
-        }), 400
-
-    cod_sectores = set()
-    layer.ResetReading()
-    feature = layer.GetNextFeature()
-    while feature is not None:
-        value = feature.GetField(field_name)
-        if value not in (None, ""):
-            cod_sectores.add(str(value).strip())
-        feature = layer.GetNextFeature()
-
-    layer = None
-    datasource = None
-
-    historico_registros = 0
-    fecha_operacion = datetime.utcnow()
-
-    if cod_sectores:
-        try:
-            with db.session.begin():
-                existing_lotes = (
-                    db.session.execute(
-                        select(Lote).where(Lote.cod_sector.in_(cod_sectores))
-                    )
-                    .scalars()
-                    .all()
-                )
-
-                historico_registros = len(existing_lotes)
-
-                for lote in existing_lotes:
-                    historico = Lote_historico.from_lote(lote, user_id, fecha_operacion)
-                    db.session.add(historico)
-                    db.session.delete(lote)
-        except Exception as exc:  # pragma: no cover
-            db.session.rollback()
-            return jsonify({
+        _clear_directory(tmp_dir)
+        return jsonify(
+            {
                 "estado": False,
-                "mensaje": f"Error al mover los registros al histórico: {exc}",
-            }), 500
+                "mensaje": "No se encontró un archivo .shp válido en el comprimido",
+            }
+        ), 404
 
     timestamp = datetime.now().strftime("%d%m%Y%H%M%S")
     final_path = uploads_dir / timestamp
@@ -160,20 +135,19 @@ def subir_shapefile():
         shutil.rmtree(final_path)
     shutil.copytree(tmp_dir, final_path)
 
+    _clear_directory(tmp_dir)
+
     return jsonify(
         {
             "estado": True,
             "mensaje": "Descomprimido correctamente",
             "nombreCarpeta": timestamp,
-            "codSectoresDetectados": len(cod_sectores),
-            "codSectores": sorted(cod_sectores),
-            "registrosHistorico": historico_registros,
         }
     ), 200
 
 
-@lotes_bp.route("/insertar_datos", methods=["POST"])
-def insertar_datos():
+@lotes_bp.route("/validar_shapefile", methods=["POST"])
+def validar_shapefile():
     try:
         payload = request.get_json(silent=True) or {}
 
@@ -181,7 +155,6 @@ def insertar_datos():
         codigo_sector = payload.get("codigoSector")
         codigo_manzana = payload.get("codigoManzana")
         codigo_lote = payload.get("codigoLote")
-        codigo_usuario = payload.get("codigoUsuario")
 
         if not all([carpeta, codigo_sector, codigo_manzana, codigo_lote]):
             return (
@@ -246,7 +219,6 @@ def insertar_datos():
         sector_field = _find_field(layer, codigo_sector)
         mzna_field = _find_field(layer, codigo_manzana)
         lote_field = _find_field(layer, codigo_lote)
-        usuario_field = _find_field(layer, codigo_usuario) if codigo_usuario else None
 
         if not all([sector_field, mzna_field, lote_field]):
             datasource = None
@@ -261,75 +233,96 @@ def insertar_datos():
                 400,
             )
 
-        layer.ResetReading()
-
-        insertados = 0
-        try:
-            with db.session.begin():
-                feature = layer.GetNextFeature()
-                while feature is not None:
-                    geometry = feature.GetGeometryRef()
-                    if geometry is not None:
-                        geometry.FlattenTo2D()
-                    wkt_geom = geometry.ExportToWkt() if geometry else None
-
-                    area = geometry.GetArea() if geometry else None
-                    perimeter = geometry.Length() if geometry else None
-
-                    sector = (feature.GetField(sector_field) or "").strip()
-                    mzna = (feature.GetField(mzna_field) or "").strip()
-                    lote = (feature.GetField(lote_field) or "").strip()
-
-                    usuario_valor = None
-                    if usuario_field:
-                        raw_usuario = feature.GetField(usuario_field)
-                        if raw_usuario not in (None, ""):
-                            try:
-                                usuario_valor = int(raw_usuario)
-                            except (TypeError, ValueError):
-                                usuario_valor = None
-
-                    fecha_actualizacion = datetime.utcnow().date()
-
-                    nuevo = Lote(
-                        cod_sector=sector,
-                        id_ubigeo="080108",
-                        id_sector=f"080108{sector}",
-                        cod_mzna=mzna,
-                        id_mzna=f"080108{sector}{mzna}",
-                        cod_lote=lote,
-                        id_lote=f"080108{sector}{mzna}{lote}",
-                        area_grafi=area,
-                        peri_grafi=perimeter,
-                        id_usuario=usuario_valor,
-                        fech_actua=fecha_actualizacion,
-                        geom=wkt_geom,
-                    )
-
-                    db.session.add(nuevo)
-                    insertados += 1
-                    feature = layer.GetNextFeature()
-        except Exception as exc:  # pragma: no cover
-            db.session.rollback()
+        if not _geometry_is_polygon(layer):
+            datasource = None
+            layer = None
             return (
                 jsonify(
                     {
                         "estado": False,
-                        "mensaje": f"Error al procesar los datos: {exc}",
+                        "mensaje": "La capa debe contener geometrías de tipo POLYGON",
                     }
                 ),
-                500,
+                400,
             )
-        finally:
-            layer = None
+
+        srid = _get_layer_srid(layer)
+        if srid != "32719":
             datasource = None
+            layer = None
+            return (
+                jsonify(
+                    {
+                        "estado": False,
+                        "mensaje": "La proyección del Shapefile debe ser EPSG:32719",
+                    }
+                ),
+                400,
+            )
+
+        field_map = {
+            "cod_sector": sector_field,
+            "cod_mzna": mzna_field,
+            "cod_lote": lote_field,
+        }
+
+        errores = _validate_field_lengths(layer, field_map)
+
+        errores_detectados = {
+            clave: indices for clave, indices in errores.items() if indices
+        }
+
+        layer.ResetReading()
+        contador = Counter()
+        feature = layer.GetNextFeature()
+        while feature is not None:
+            sector_val = (feature.GetField(sector_field) or "").strip()
+            if sector_val:
+                contador[sector_val] += 1
+            else:
+                contador["(VACIO)"] += 1
+            feature = layer.GetNextFeature()
+
+        reporte = [
+            {"codSector": cod_sector, "totalRegistros": total}
+            for cod_sector, total in sorted(contador.items())
+        ]
+
+        datasource = None
+        layer = None
+
+        if errores_detectados:
+            return (
+                jsonify(
+                    {
+                        "estado": False,
+                        "mensaje": "Se encontraron errores en los códigos del shapefile",
+                        "errores": errores_detectados,
+                        "reporte": reporte,
+                    }
+                ),
+                400,
+            )
+
+        metadata_path = carpeta_path / "validation.json"
+        metadata = {
+            "validado": True,
+            "campoSector": sector_field,
+            "campoManzana": mzna_field,
+            "campoLote": lote_field,
+            "fechaValidacion": datetime.utcnow().isoformat(),
+        }
+
+        metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
 
         return (
             jsonify(
                 {
                     "estado": True,
-                    "mensaje": f"Datos migrados exitosamente. Registros insertados: {insertados}",
-                    "registrosInsertados": insertados,
+                    "mensaje": "Shapefile validado correctamente",
+                    "reporte": reporte,
                 }
             ),
             200,
@@ -345,3 +338,223 @@ def insertar_datos():
             ),
             500,
         )
+
+
+@lotes_bp.route("/cargar_shapefile", methods=["POST"])
+def cargar_shapefile():
+    payload = request.get_json(silent=True) or {}
+
+    carpeta = payload.get("nombreCarpeta")
+    usuario_id = payload.get("id_usuario")
+
+    if not carpeta or usuario_id is None:
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": "Los parámetros 'nombreCarpeta' e 'id_usuario' son obligatorios",
+                }
+            ),
+            400,
+        )
+
+    try:
+        usuario_id = int(usuario_id)
+    except (TypeError, ValueError):
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": "El parámetro 'id_usuario' debe ser numérico",
+                }
+            ),
+            400,
+        )
+
+    carpeta_path = Path(current_app.config["UPLOADS_DIR"]) / carpeta
+    if not carpeta_path.exists():
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": f"No existe la carpeta indicada: {carpeta}",
+                }
+            ),
+            404,
+        )
+
+    metadata_path = carpeta_path / "validation.json"
+    if not metadata_path.exists():
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": "Debe validar el Shapefile antes de cargarlo",
+                }
+            ),
+            400,
+        )
+
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": "No se pudo leer la información de validación",
+                }
+            ),
+            500,
+        )
+
+    shapefile_path = _find_shapefile(carpeta_path)
+    if shapefile_path is None:
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": f"No se encontró archivo .shp en la carpeta: {carpeta}",
+                }
+            ),
+            404,
+        )
+
+    datasource = ogr.Open(str(shapefile_path))
+    if datasource is None:
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": f"No se pudo abrir el archivo Shapefile: {shapefile_path}",
+                }
+            ),
+            500,
+        )
+
+    layer = datasource.GetLayer()
+    if layer is None:
+        datasource = None
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": "El archivo Shapefile no contiene capas válidas",
+                }
+            ),
+            500,
+        )
+
+    sector_field = metadata.get("campoSector")
+    mzna_field = metadata.get("campoManzana")
+    lote_field = metadata.get("campoLote")
+
+    if not all([sector_field, mzna_field, lote_field]):
+        datasource = None
+        layer = None
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": "La información de validación es incompleta",
+                }
+            ),
+            400,
+        )
+
+    cod_sectores = set()
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    while feature is not None:
+        sector_val = (feature.GetField(sector_field) or "").strip()
+        if sector_val:
+            cod_sectores.add(sector_val)
+        feature = layer.GetNextFeature()
+
+    fecha_operacion = datetime.utcnow()
+    historico_registros = 0
+    insertados = 0
+
+    try:
+        with db.session.begin():
+            if cod_sectores:
+                existing_lotes = (
+                    db.session.execute(
+                        select(Lote).where(Lote.cod_sector.in_(cod_sectores))
+                    )
+                    .scalars()
+                    .all()
+                )
+
+                historico_registros = len(existing_lotes)
+
+                for lote in existing_lotes:
+                    historico = LoteHistorico.from_lote(
+                        lote, usuario_id, fecha_operacion
+                    )
+                    db.session.add(historico)
+                    db.session.delete(lote)
+
+            layer.ResetReading()
+            feature = layer.GetNextFeature()
+            while feature is not None():
+                geometry = feature.GetGeometryRef()
+                if geometry is not None:
+                    geometry.FlattenTo2D()
+                wkt_geom = geometry.ExportToWkt() if geometry else None
+
+                area = geometry.GetArea() if geometry else None
+                perimeter = geometry.Length() if geometry else None
+
+                sector = (feature.GetField(sector_field) or "").strip()
+                mzna = (feature.GetField(mzna_field) or "").strip()
+                lote = (feature.GetField(lote_field) or "").strip()
+
+                fecha_actualizacion = datetime.utcnow().date()
+
+                nuevo = Lote(
+                    cod_sector=sector,
+                    id_ubigeo="080108",
+                    id_sector=f"080108{sector}",
+                    cod_mzna=mzna,
+                    id_mzna=f"080108{sector}{mzna}",
+                    cod_lote=lote,
+                    id_lote=f"080108{sector}{mzna}{lote}",
+                    area_grafi=area,
+                    peri_grafi=perimeter,
+                    id_usuario=usuario_id,
+                    fech_actua=fecha_actualizacion,
+                    geom=wkt_geom,
+                )
+
+                db.session.add(nuevo)
+                insertados += 1
+                feature = layer.GetNextFeature()
+    except Exception as exc:  # pragma: no cover
+        db.session.rollback()
+        datasource = None
+        layer = None
+        return (
+            jsonify(
+                {
+                    "estado": False,
+                    "mensaje": f"Error al procesar los datos: {exc}",
+                }
+            ),
+            500,
+        )
+    finally:
+        layer = None
+        datasource = None
+
+    return (
+        jsonify(
+            {
+                "estado": True,
+                "mensaje": "Datos migrados exitosamente",
+                "registrosInsertados": insertados,
+                "registrosHistorico": historico_registros,
+            }
+        ),
+        200,
+    )
