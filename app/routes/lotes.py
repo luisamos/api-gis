@@ -4,10 +4,12 @@ import zipfile
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 from flask import Blueprint, current_app, jsonify, request
 from osgeo import ogr
+from pyproj import CRS
+from pyproj.exceptions import CRSError
 from sqlalchemy import select
 
 from app.extensions import db
@@ -16,6 +18,14 @@ from app.models import Lote, LoteHistorico
 ogr.UseExceptions()
 
 lotes_bp = Blueprint("lotes", __name__)
+
+
+@lotes_bp.route("/")
+def inicio():
+    if current_app.config.get("IS_DEV", False):
+        return "🟢 [DESAROLLO] - MDW | API-GIS"
+    return "🟢 MDW | API-GIS"
+
 
 def _clear_directory(path: Path) -> None:
     if not path.exists():
@@ -26,10 +36,12 @@ def _clear_directory(path: Path) -> None:
         else:
             shutil.rmtree(item)
 
+
 def _find_shapefile(directory: Path) -> Optional[Path]:
     for shp_file in directory.rglob("*.shp"):
         return shp_file
     return None
+
 
 def _find_field(layer, target_name: str) -> Optional[str]:
     layer_definition = layer.GetLayerDefn()
@@ -39,8 +51,16 @@ def _find_field(layer, target_name: str) -> Optional[str]:
             return field_definition.GetName()
     return None
 
-def _validate_field_lengths(layer, field_map: Dict[str, str]) -> Dict[str, list]:
-    errores = {"cod_sector": [], "cod_mzna": [], "cod_lote": []}
+
+def _validate_field_lengths(
+    layer, field_map: Dict[str, str]
+) -> Tuple[Dict[str, List[int]], List[int]]:
+    errores: Dict[str, List[int]] = {
+        "cod_sector": [],
+        "cod_mzna": [],
+        "cod_lote": [],
+    }
+    registros_todos_vacios: List[int] = []
 
     layer.ResetReading()
     feature = layer.GetNextFeature()
@@ -49,6 +69,12 @@ def _validate_field_lengths(layer, field_map: Dict[str, str]) -> Dict[str, list]
         sector_val = (feature.GetField(field_map["cod_sector"]) or "").strip()
         mzna_val = (feature.GetField(field_map["cod_mzna"]) or "").strip()
         lote_val = (feature.GetField(field_map["cod_lote"]) or "").strip()
+
+        if not sector_val and not mzna_val and not lote_val:
+            registros_todos_vacios.append(index)
+            feature = layer.GetNextFeature()
+            index += 1
+            continue
 
         if len(sector_val) != 2 or not sector_val.isdigit():
             errores["cod_sector"].append(index)
@@ -60,22 +86,56 @@ def _validate_field_lengths(layer, field_map: Dict[str, str]) -> Dict[str, list]
         feature = layer.GetNextFeature()
         index += 1
 
-    return errores
+    return errores, registros_todos_vacios
+
 
 def _geometry_is_polygon(layer) -> bool:
     geom_type = layer.GetGeomType()
     geom_name = ogr.GeometryTypeToName(geom_type) or ""
     return "POLYGON" in geom_name.upper()
 
+
 def _get_layer_srid(layer) -> Optional[str]:
-    spatial_ref = layer.GetSpatialRef()
+    try:
+        spatial_ref = layer.GetSpatialRef()
+    except RuntimeError:
+        return None
+
     if spatial_ref is None:
         return None
-    authority_name = spatial_ref.GetAuthorityName(None)
-    authority_code = spatial_ref.GetAuthorityCode(None)
+
+    authority_name: Optional[str]
+    authority_code: Optional[str]
+    try:
+        authority_name = spatial_ref.GetAuthorityName(None)
+        authority_code = spatial_ref.GetAuthorityCode(None)
+    except RuntimeError:
+        authority_name = None
+        authority_code = None
+
     if authority_name and authority_code:
         return authority_code
-    return None
+
+    wkt: Optional[str]
+    try:
+        wkt = spatial_ref.ExportToWkt()
+    except RuntimeError:
+        wkt = None
+
+    if not wkt:
+        return None
+
+    try:
+        crs = CRS.from_wkt(wkt)
+    except CRSError:
+        return None
+
+    epsg_code = crs.to_epsg()
+    if epsg_code is None:
+        return None
+
+    return str(epsg_code)
+
 
 @lotes_bp.route("/subir_shapefile", methods=["POST"])
 def subir_shapefile():
@@ -104,8 +164,8 @@ def subir_shapefile():
 
     zip_path.unlink(missing_ok=True)
 
-    shapefile_path = _find_shapefile(tmp_dir)
-    if shapefile_path is None:
+    shapefiles = list(tmp_dir.rglob("*.shp"))
+    if not shapefiles:
         _clear_directory(tmp_dir)
         return jsonify(
             {
@@ -113,6 +173,15 @@ def subir_shapefile():
                 "mensaje": "No se encontró un archivo .shp válido en el comprimido",
             }
         ), 404
+
+    if len(shapefiles) > 1:
+        _clear_directory(tmp_dir)
+        return jsonify(
+            {
+                "estado": False,
+                "mensaje": "El archivo comprimido debe contener exactamente un Shapefile",
+            }
+        ), 400
 
     timestamp = datetime.now().strftime("%d%m%Y%H%M%S")
     final_path = uploads_dir / timestamp
@@ -252,7 +321,7 @@ def validar_shapefile():
             "cod_lote": lote_field,
         }
 
-        errores = _validate_field_lengths(layer, field_map)
+        errores, registros_todos_vacios = _validate_field_lengths(layer, field_map)
 
         errores_detectados = {
             clave: indices for clave, indices in errores.items() if indices
@@ -260,13 +329,20 @@ def validar_shapefile():
 
         layer.ResetReading()
         contador = Counter()
+        registros_campos_vacios = 0
         feature = layer.GetNextFeature()
         while feature is not None:
             sector_val = (feature.GetField(sector_field) or "").strip()
-            if sector_val:
+            mzna_val = (feature.GetField(mzna_field) or "").strip()
+            lote_val = (feature.GetField(lote_field) or "").strip()
+
+            if not sector_val and not mzna_val and not lote_val:
+                registros_campos_vacios += 1
+                contador["Vacio"] += 1
+            elif sector_val:
                 contador[sector_val] += 1
             else:
-                contador["(VACIO)"] += 1
+                contador["Vacio"] += 1
             feature = layer.GetNextFeature()
 
         reporte = [
@@ -288,6 +364,18 @@ def validar_shapefile():
                     }
                 ),
                 400,
+            )
+
+        if registros_campos_vacios or registros_todos_vacios:
+            return (
+                jsonify(
+                    {
+                        "estado": False,
+                        "mensaje": "Shapefile validado correctamente",
+                        "reporte": reporte,
+                    }
+                ),
+                200,
             )
 
         metadata_path = carpeta_path / "validation.json"
@@ -316,14 +404,10 @@ def validar_shapefile():
 
     except Exception as exc:  # pragma: no cover
         return (
-            jsonify(
-                {
-                    "estado": False,
-                    "mensaje": f"Error inesperado: {exc}",
-                }
-            ),
+            jsonify({"estado": False, "mensaje": f"Error inesperado: {exc}"}),
             500,
         )
+
 
 @lotes_bp.route("/cargar_shapefile", methods=["POST"])
 def cargar_shapefile():
@@ -482,7 +566,7 @@ def cargar_shapefile():
 
             layer.ResetReading()
             feature = layer.GetNextFeature()
-            while feature is not None():
+            while feature is not None:
                 geometry = feature.GetGeometryRef()
                 if geometry is not None:
                     geometry.FlattenTo2D()
