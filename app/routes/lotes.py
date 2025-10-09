@@ -95,7 +95,8 @@ def _geometry_is_polygon(layer) -> bool:
     return "POLYGON" in geom_name.upper()
 
 
-def _get_layer_srid(layer) -> Optional[str]:
+def _get_layer_srid(layer, expected_epsg: Optional[int] = None) -> Optional[str]:
+    print(layer.GetSpatialRef())
     try:
         spatial_ref = layer.GetSpatialRef()
     except RuntimeError:
@@ -131,10 +132,19 @@ def _get_layer_srid(layer) -> Optional[str]:
         return None
 
     epsg_code = crs.to_epsg()
-    if epsg_code is None:
-        return None
+    if epsg_code is not None:
+        return str(epsg_code)
 
-    return str(epsg_code)
+    if expected_epsg is not None:
+        try:
+            expected_crs = CRS.from_epsg(expected_epsg)
+        except CRSError:
+            return None
+
+    if crs == expected_crs or crs.is_exact_same(expected_crs):
+            return str(expected_epsg)
+
+    return None
 
 
 @lotes_bp.route("/subir_shapefile", methods=["POST"])
@@ -301,7 +311,7 @@ def validar_shapefile():
                 400,
             )
 
-        srid = _get_layer_srid(layer)
+        srid = _get_layer_srid(layer, expected_epsg=32719)
         if srid != "32719":
             datasource = None
             layer = None
