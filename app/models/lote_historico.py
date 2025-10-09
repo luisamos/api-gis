@@ -1,9 +1,6 @@
 from datetime import datetime
-
 from geoalchemy2 import Geometry
-
 from app.extensions import db
-
 
 class LoteHistorico(db.Model):
     __tablename__ = "tgh_lote"

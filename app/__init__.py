@@ -4,6 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from app.config import DB_URL
+import geoalchemy2
 from app.extensions import db, migrate
 from app.routes import register_routes
 
