@@ -4,7 +4,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from app.config import DB_URL
-from app.extensions import db
+from app.extensions import db, migrate
 from app.routes import register_routes
 
 
@@ -29,12 +29,13 @@ def create_app(is_dev: bool = True) -> Flask:
 
     if is_dev:
         print('\n🔴\t[DESAROLLO] - MDW | API-GIS\n')
-        CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+        CORS(app, resources={r"/*": {"origins": "http://127.0.0.2:5173"}})
     else:
         print('\n🟢\t[PRODUCCION] - MDW | API-GIS\n')
         CORS(app)
 
     db.init_app(app)
+    migrate.init_app(app, db)
     register_routes(app)
 
     return app

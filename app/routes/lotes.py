@@ -17,14 +17,6 @@ ogr.UseExceptions()
 
 lotes_bp = Blueprint("lotes", __name__)
 
-
-@lotes_bp.route("/")
-def inicio():
-    if current_app.config.get("IS_DEV", False):
-        return "🟢 [DESAROLLO] - MDW | API-GIS"
-    return "🟢 MDW | API-GIS"
-
-
 def _clear_directory(path: Path) -> None:
     if not path.exists():
         return
@@ -34,12 +26,10 @@ def _clear_directory(path: Path) -> None:
         else:
             shutil.rmtree(item)
 
-
 def _find_shapefile(directory: Path) -> Optional[Path]:
     for shp_file in directory.rglob("*.shp"):
         return shp_file
     return None
-
 
 def _find_field(layer, target_name: str) -> Optional[str]:
     layer_definition = layer.GetLayerDefn()
@@ -48,7 +38,6 @@ def _find_field(layer, target_name: str) -> Optional[str]:
         if field_definition.GetName().lower() == target_name.lower():
             return field_definition.GetName()
     return None
-
 
 def _validate_field_lengths(layer, field_map: Dict[str, str]) -> Dict[str, list]:
     errores = {"cod_sector": [], "cod_mzna": [], "cod_lote": []}
@@ -73,12 +62,10 @@ def _validate_field_lengths(layer, field_map: Dict[str, str]) -> Dict[str, list]
 
     return errores
 
-
 def _geometry_is_polygon(layer) -> bool:
     geom_type = layer.GetGeomType()
     geom_name = ogr.GeometryTypeToName(geom_type) or ""
     return "POLYGON" in geom_name.upper()
-
 
 def _get_layer_srid(layer) -> Optional[str]:
     spatial_ref = layer.GetSpatialRef()
@@ -89,7 +76,6 @@ def _get_layer_srid(layer) -> Optional[str]:
     if authority_name and authority_code:
         return authority_code
     return None
-
 
 @lotes_bp.route("/subir_shapefile", methods=["POST"])
 def subir_shapefile():
@@ -338,7 +324,6 @@ def validar_shapefile():
             ),
             500,
         )
-
 
 @lotes_bp.route("/cargar_shapefile", methods=["POST"])
 def cargar_shapefile():
