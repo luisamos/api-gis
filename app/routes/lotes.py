@@ -96,7 +96,6 @@ def _geometry_is_polygon(layer) -> bool:
 
 
 def _get_layer_srid(layer, expected_epsg: Optional[int] = None) -> Optional[str]:
-    print(layer.GetSpatialRef())
     try:
         spatial_ref = layer.GetSpatialRef()
     except RuntimeError:

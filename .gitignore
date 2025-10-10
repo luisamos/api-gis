@@ -1,4 +1,5 @@
 venv/
+venv/pyvenv.cfg
 .venv/
 __pycache__/
 *.pyc
