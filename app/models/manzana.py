@@ -3,13 +3,13 @@ from sqlalchemy import Sequence
 from geoalchemy2 import Geometry
 from app.extensions import db
 
-class Lote(db.Model):
-  __tablename__ = "tg_lote"
+class Manzana(db.Model):
+  __tablename__ = "tg_manzana"
   __table_args__ = {"schema": "geo"}
 
   gid = db.Column(
       db.Integer,
-      Sequence("tg_lote_gid_seq", schema="geo"),
+      Sequence("tg_manzana_gid_seq", schema="geo"),
       primary_key=True,
       autoincrement=True,
   )
@@ -18,11 +18,8 @@ class Lote(db.Model):
   id_sector = db.Column(db.String(8))
   cod_mzna = db.Column(db.String(3))
   id_mzna = db.Column(db.String(11))
-  cod_lote = db.Column(db.String(3))
-  id_lote = db.Column(db.String(14))
   area_grafi = db.Column(db.Float)
   peri_grafi = db.Column(db.Float)
-  cuc = db.Column(db.String(12))
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
