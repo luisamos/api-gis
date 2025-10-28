@@ -1,5 +1,5 @@
-from app import create_app
 from app.config import IS_DEV
+from app import create_app
 
 app = create_app(is_dev=IS_DEV)
 

@@ -21,17 +21,15 @@ from app.routes.shapefile_utils import (
   validate_fields,
 )
 
+manzanas_bp = Blueprint("manzanas", __name__, url_prefix='/manzanas')
 
-manzanas_bp = Blueprint("manzanas", __name__)
-
-
-@manzanas_bp.route("/manzanas/subir_shapefile", methods=["POST"])
+@manzanas_bp.route("/subir_shapefile", methods=["POST"])
 def subir_shapefile():
   payload, status = handle_shapefile_upload(request.files.get("file"))
   return jsonify(payload), status
 
 
-@manzanas_bp.route("/manzanas/validar_shapefile", methods=["POST"])
+@manzanas_bp.route("/validar_shapefile", methods=["POST"])
 def validar_shapefile():
   payload = request.get_json(silent=True) or {}
 
@@ -197,8 +195,7 @@ def validar_shapefile():
       200,
   )
 
-
-@manzanas_bp.route("/manzanas/cargar_shapefile", methods=["POST"])
+@manzanas_bp.route("/cargar_shapefile", methods=["POST"])
 def cargar_shapefile():
   payload = request.get_json(silent=True) or {}
 
