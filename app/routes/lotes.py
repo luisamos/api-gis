@@ -148,10 +148,32 @@ def validar_shapefile():
         "cod_sector",
     )
 
-    reporte = [
-        {"codSector": cod_sector, "totalRegistros": total}
-        for cod_sector, total in sorted(contador.items())
-    ]
+    # Calcular el número de manzanas únicas por sector.
+    manzanas_por_sector: Dict[str, set[str]] = {}
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    while feature is not None:
+        sector_val = (feature.GetField(sector_field) or "").strip()
+        mzna_val = (feature.GetField(mzna_field) or "").strip()
+
+        if sector_val and mzna_val:
+            manzanas_por_sector.setdefault(sector_val, set()).add(mzna_val)
+
+        feature = layer.GetNextFeature()
+
+    reporte = []
+    for cod_sector, total in sorted(contador.items()):
+        if cod_sector == "Vacio":
+            continue
+
+        total_manzanas = len(manzanas_por_sector.get(cod_sector, set()))
+        reporte.append(
+            {
+                "codSector": cod_sector,
+                "totalManzanas": total_manzanas,
+                "totalLotes": total,
+            }
+        )
 
     datasource = None
     layer = None
