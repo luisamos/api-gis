@@ -6,7 +6,7 @@ Este documento describe cómo ejecutar **API-GIS** en un servidor Ubuntu 24.04 u
 
 ```bash
 sudo apt update
-sudo apt install -y python3-venv python3-dev build-essential libpq-dev gdal-bin git apache2
+sudo apt install -y python3-venv python3-dev build-essential libpq-dev gdal-bin libgdal-dev git apache2
 # Opcional pero recomendado para exponer el puerto 9101
 sudo ufw allow 9101/tcp
 ```
@@ -120,3 +120,33 @@ sudo systemctl reload apache2
    ```
 
 Con estos pasos la aplicación queda desplegada en Ubuntu 24.04, atendiendo internamente en el puerto 9101 y expuesta de forma segura mediante tu VirtualHost SSL en Apache.
+
+## 6. Solución de problemas comunes
+
+### El servicio `api-gis-catastro.service` falla con `status=3`
+
+`gunicorn` devuelve el código de salida `3` cuando no puede importar la aplicación WSGI. En la mayoría de servidores ocurre porque las dependencias de GDAL/OGR no están completamente instaladas. Comprueba lo siguiente:
+
+```bash
+python3 - <<'PY'
+from osgeo import ogr
+print("GDAL disponible", ogr.GetUseExceptions())
+PY
+```
+
+Si el comando falla, instala los paquetes del sistema y vuelve a compilar el módulo Python:
+
+```bash
+sudo apt install -y gdal-bin libgdal-dev
+source /apps/venv/api-gis/bin/activate
+pip install --no-cache-dir --force-reinstall gdal==3.10.2
+```
+
+Tras la reinstalación reinicia el servicio y revisa el log:
+
+```bash
+sudo systemctl restart api-gis-catastro.service
+journalctl -u api-gis-catastro.service -n 50 -f
+```
+
+Los endpoints que trabajan con Shapefile ahora devuelven un mensaje claro si GDAL sigue sin estar disponible, de forma que el resto del API pueda seguir atendiendo peticiones.

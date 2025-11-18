@@ -7,20 +7,20 @@ from sqlalchemy import select
 from app.extensions import db
 from app.models import EjeVia, EjeViaHistorico
 from app.routes.shapefile_utils import (
-    FieldSpec,
-    ID_UBIGEO,
-    extract_fields,
-    find_field,
-    find_shapefile,
-    geometry_matches,
-    get_layer_srid,
-    handle_shapefile_upload,
-    load_metadata,
-    open_shapefile_layer,
-    store_metadata,
-    validate_fields,
+  FieldSpec,
+  ID_UBIGEO,
+  extract_fields,
+  find_field,
+  find_shapefile,
+  geometry_matches,
+  get_layer_srid,
+  handle_gdal_missing,
+  handle_shapefile_upload,
+  load_metadata,
+  open_shapefile_layer,
+  store_metadata,
+  validate_fields,
 )
-
 
 eje_vias_bp = Blueprint("eje_vias", __name__, url_prefix='/eje_vias')
 
@@ -30,6 +30,7 @@ def subir_shapefile():
   return jsonify(payload), status
 
 @eje_vias_bp.route("/validar_shapefile", methods=["POST"])
+@handle_gdal_missing
 def validar_shapefile():
   payload = request.get_json(silent=True) or {}
 
@@ -204,6 +205,7 @@ def validar_shapefile():
   )
 
 @eje_vias_bp.route("/cargar_shapefile", methods=["POST"])
+@handle_gdal_missing
 def cargar_shapefile():
   payload = request.get_json(silent=True) or {}
 

@@ -13,6 +13,7 @@ from app.routes.shapefile_utils import (
   find_shapefile,
   geometry_matches,
   get_layer_srid,
+  handle_gdal_missing,
   handle_shapefile_upload,
   load_metadata,
   open_shapefile_layer,
@@ -28,6 +29,7 @@ def subir_shapefile():
   return jsonify(payload), status
 
 @sectores_bp.route("/validar_shapefile", methods=["POST"])
+@handle_gdal_missing
 def validar_shapefile():
   payload = request.get_json(silent=True) or {}
 
@@ -185,6 +187,7 @@ def validar_shapefile():
   )
 
 @sectores_bp.route("/cargar_shapefile", methods=["POST"])
+@handle_gdal_missing
 def cargar_shapefile():
   payload = request.get_json(silent=True) or {}
 

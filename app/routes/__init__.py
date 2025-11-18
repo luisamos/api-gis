@@ -1,6 +1,6 @@
 from .sectores import sectores_bp
-from .lotes import lotes_bp
 from .manzanas import manzanas_bp
+from .lotes import lotes_bp
 from .eje_vias import eje_vias_bp
 
 

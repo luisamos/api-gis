@@ -11,7 +11,6 @@ from .config import DB_URL, ID_UBIGEO
 from .extensions import db, migrate
 from .routes import register_routes
 
-
 def prepare_directories(base_dir: Path) -> Dict[str, str]:
 
   uploads_dir = Path(os.getenv("UPLOADS_DIR", base_dir / "uploads"))
@@ -24,7 +23,6 @@ def prepare_directories(base_dir: Path) -> Dict[str, str]:
     "UPLOADS_DIR": str(uploads_dir),
     "TMP_DIR": str(tmp_dir),
   }
-
 
 def create_app(is_dev: bool = False) -> Flask:
   app = Flask(__name__)

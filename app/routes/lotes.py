@@ -15,13 +15,13 @@ from app.routes.shapefile_utils import (
   find_shapefile,
   geometry_matches,
   get_layer_srid,
+  handle_gdal_missing,
   handle_shapefile_upload,
   load_metadata,
   open_shapefile_layer,
   store_metadata,
   validate_fields,
 )
-
 
 lotes_bp = Blueprint("lotes", __name__, url_prefix='/lotes')
 
@@ -31,6 +31,7 @@ def subir_shapefile():
   return jsonify(payload), status
 
 @lotes_bp.route("/validar_shapefile", methods=["POST"])
+@handle_gdal_missing
 def validar_shapefile():
   try:
     payload = request.get_json(silent=True) or {}
@@ -229,8 +230,8 @@ def validar_shapefile():
         500,
     )
 
-
 @lotes_bp.route("/cargar_shapefile", methods=["POST"])
+@handle_gdal_missing
 def cargar_shapefile():
     payload = request.get_json(silent=True) or {}
 
