@@ -7,7 +7,7 @@ from typing import Dict
 from flask import Flask
 from flask_cors import CORS
 
-from .config import DB_URL, ID_UBIGEO
+from .config import DB_URL, ID_UBIGEO, IS_DEV
 from .extensions import db, migrate
 from .routes import register_routes
 
@@ -24,7 +24,7 @@ def prepare_directories(base_dir: Path) -> Dict[str, str]:
     "TMP_DIR": str(tmp_dir),
   }
 
-def create_app(is_dev: bool = False) -> Flask:
+def create_app() -> Flask:
   app = Flask(__name__)
 
   base_dir = Path(__file__).resolve().parent.parent
@@ -39,8 +39,8 @@ def create_app(is_dev: bool = False) -> Flask:
     **directories,
   )
 
-  if is_dev:
-    app.config["ENV"] = "development"
+  if IS_DEV:
+    app.config["ENV"] = "Development"
     app.config["DEBUG"] = True
 
   db.init_app(app)

@@ -3,7 +3,7 @@ import os
 from app.config import IS_DEV
 from app import create_app
 
-app = create_app(is_dev=IS_DEV)
+app = create_app()
 
 if __name__ == "__main__":
   if IS_DEV:
@@ -12,8 +12,7 @@ if __name__ == "__main__":
     print("🟢 MDW | API-GIS")
 
   host = os.getenv("APP_HOST", "127.0.0.2" if IS_DEV else "0.0.0.0")
-  default_port = 5000 if IS_DEV else 9101
-  port = int(os.getenv("APP_PORT", default_port))
+  port = int(os.getenv("APP_PORT", 5000))
 
   app.run(
     port=port,

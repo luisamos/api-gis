@@ -19,8 +19,11 @@ SQLAlchemy==2.0.41
 typing_extensions==4.14.0
 Werkzeug==3.1.3
 pyproj==3.7.0
-# Servidor WSGI para producción
-gunicorn==21.2.0
-# GDAL - instalación condicional
+# GDAL - instalación para Windows
 --find-links ./app/lib/
 gdal==3.10.2
+#
+# Servidor WSGI para producción
+#
+#gunicorn==21.2.0
+#gdal==3.8.4
