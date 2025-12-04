@@ -25,9 +25,9 @@ from werkzeug.datastructures import FileStorage
 from app.config import ID_UBIGEO
 
 GDAL_ERROR_MESSAGE = (
-    "Las operaciones con Shapefile requieren GDAL/OGR. "
-    "Instala 'gdal-bin' y 'libgdal-dev' en el sistema y la librería de Python "
-    "(pip install gdal) antes de volver a intentarlo."
+  "Las operaciones con Shapefile requieren GDAL/OGR. "
+  "Instala 'gdal-bin' y 'libgdal-dev' en el sistema y la librería de Python "
+  "(pip install gdal) antes de volver a intentarlo."
 )
 
 class GDALNotAvailable(RuntimeError):

@@ -17,11 +17,9 @@ class Puerta(db.Model):
   )
   id_ubigeo = db.Column(db.String(6))
   cod_puerta = db.Column(db.String(2))
+  id_lote = db.Column(db.String(14))
   id_puerta = db.Column(db.String(20))
   esta_puerta = db.Column(db.String(1))
-  id_lote = db.Column(db.String(14))
-  area_grafi = db.Column(db.Float)
-  peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POINT", srid=32719))
@@ -33,11 +31,9 @@ class PuertaHistorico(db.Model):
   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
   gid = db.Column(db.Integer)
   cod_puerta = db.Column(db.String(2))
+  id_lote = db.Column(db.String(14))
   id_puerta = db.Column(db.String(20))
   esta_puerta = db.Column(db.String(1))
-  id_lote = db.Column(db.String(14))
-  area_grafi = db.Column(db.Float)
-  peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POINT", srid=32719))
@@ -49,11 +45,9 @@ class PuertaHistorico(db.Model):
     return cls(
       gid = p.gid,
       cod_puerta = p.cod_puerta,
+      id_lote = p.id_lote,
       id_puerta = p.id_puerta,
       esta_puerta = p.esta_puerta,
-      id_lote = p.id_lote,
-      area_grafi = p.area_grafi,
-      peri_grafi = p.peri_grafi,
       usuario_crea = p.usuario_crea,
       fecha_crea = p.fecha_crea,
       geom = p.geom,

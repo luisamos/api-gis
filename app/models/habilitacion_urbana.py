@@ -22,6 +22,8 @@ class HabilitacionUrbana(db.Model):
   nomb_hab_urb = db.Column(db.String(200))
   etap_hab_urb = db.Column(db.String(200))
   expediente = db.Column(db.String(500))
+  area_grafi = db.Column(db.Float)
+  peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
@@ -39,6 +41,8 @@ class HabilitacionUrbanaHistorico(db.Model):
   nomb_hab_urb = db.Column(db.String(200))
   etap_hab_urb = db.Column(db.String(200))
   expediente = db.Column(db.String(500))
+  area_grafi = db.Column(db.Float)
+  peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
@@ -56,6 +60,8 @@ class HabilitacionUrbanaHistorico(db.Model):
       nomb_hab_urb=hu.nomb_hab_urb,
       etap_hab_urb = hu.etap_hab_urb,
       expediente = hu.expediente,
+      area_grafi = hu.area_grafi,
+      peri_grafi = hu.peri_grafi
       usuario_crea=hu.usuario_crea,
       fecha_crea=hu.fecha_crea,
       geom=hu.geom,
