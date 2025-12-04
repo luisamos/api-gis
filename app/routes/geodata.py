@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Optional
+from typing import Callable, Dict, Iterable, Optional, Type
 
 from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
@@ -47,22 +47,22 @@ from app.routes.shapefile_utils import (
 
 @dataclass
 class TableDefinition:
-    name: str
-    geom_keyword: str
-    srid: int
-    specs: Iterable[FieldSpec]
-    report_key: str
-    model
-    historico_model
-    delete_key: str
-    builder: Callable
+  name: str
+  geom_keyword: str
+  srid: int
+  specs: Iterable[FieldSpec]
+  report_key: str
+  model: Type
+  historico_model : Type
+  delete_key: str
+  builder: Callable
 
 def get_value(feature, field_name: Optional[str]) -> str:
-    if not field_name:
-        return ""
-    return (feature.GetField(field_name) or "").strip()
+  if not field_name:
+    return ""
+  return (feature.GetField(field_name) or "").strip()
 
-def area_and_length(geometry):
+def get_area_perimetro(geometry):
     if geometry is None:
         return None, None
     geometry.FlattenTo2D()
@@ -70,88 +70,88 @@ def area_and_length(geometry):
 
 def sector_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  area, perimeter = area_and_length(geometry)
+  area, perimetro = get_area_perimetro(geometry)
   cod_sector = get_value(feature, fields.get("cod_sector"))
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Sector(
-      id_ubigeo=ID_UBIGEO,
-      cod_sector=cod_sector,
-      id_sector=f"{ID_UBIGEO}{cod_sector}",
-      area_grafi=area,
-      peri_grafi=perimeter,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_sector=cod_sector,
+    id_sector=f"{ID_UBIGEO}{cod_sector}",
+    area_grafi=area,
+    peri_grafi=perimetro,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def manzana_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  area, perimeter = area_and_length(geometry)
+  area, perimetro = get_area_perimetro(geometry)
   cod_sector = get_value(feature, fields.get("cod_sector"))
   cod_mzna = get_value(feature, fields.get("cod_mzna"))
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Manzana(
-      id_ubigeo=ID_UBIGEO,
-      cod_sector=cod_sector,
-      id_sector=f"{ID_UBIGEO}{cod_sector}",
-      cod_mzna=cod_mzna,
-      id_mzna=f"{ID_UBIGEO}{cod_sector}{cod_mzna}",
-      area_grafi=area,
-      peri_grafi=perimeter,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_sector=cod_sector,
+    id_sector=f"{ID_UBIGEO}{cod_sector}",
+    cod_mzna=cod_mzna,
+    id_mzna=f"{ID_UBIGEO}{cod_sector}{cod_mzna}",
+    area_grafi=area,
+    peri_grafi=perimetro,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def lote_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  area, perimeter = area_and_length(geometry)
+  area, perimetro = get_area_perimetro(geometry)
   cod_sector = get_value(feature, fields.get("cod_sector"))
   cod_mzna = get_value(feature, fields.get("cod_mzna"))
   cod_lote = get_value(feature, fields.get("cod_lote"))
   cuc = get_value(feature, fields.get("cuc")) or None
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Lote(
-      id_ubigeo=ID_UBIGEO,
-      cod_sector=cod_sector,
-      id_sector=f"{ID_UBIGEO}{cod_sector}",
-      cod_mzna=cod_mzna,
-      id_mzna=f"{ID_UBIGEO}{cod_sector}{cod_mzna}",
-      cod_lote=cod_lote,
-      id_lote=f"{ID_UBIGEO}{cod_sector}{cod_mzna}{cod_lote}",
-      cuc=cuc,
-      area_grafi=area,
-      peri_grafi=perimeter,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_sector=cod_sector,
+    id_sector=f"{ID_UBIGEO}{cod_sector}",
+    cod_mzna=cod_mzna,
+    id_mzna=f"{ID_UBIGEO}{cod_sector}{cod_mzna}",
+    cod_lote=cod_lote,
+    id_lote=f"{ID_UBIGEO}{cod_sector}{cod_mzna}{cod_lote}",
+    cuc=cuc,
+    area_grafi=area,
+    peri_grafi=perimetro,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def eje_via_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  length = area_and_length(geometry)
+  length = get_area_perimetro(geometry)
   cod_sector = get_value(feature, fields.get("cod_sector"))
   cod_via = get_value(feature, fields.get("cod_via"))
   nombre_via = get_value(feature, fields.get("nomb_via"))
   tipo_via = get_value(feature, fields.get("tipo_via")) or None
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return EjeVia(
-      id_ubigeo=ID_UBIGEO,
-      cod_sector=cod_sector or None,
-      id_sector=f"{ID_UBIGEO}{cod_sector}" if cod_sector else None,
-      cod_via=cod_via,
-      id_via=f"{ID_UBIGEO}{cod_via}",
-      nomb_via=nombre_via,
-      tipo_via=tipo_via,
-      peri_grafi=length,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_sector=cod_sector or None,
+    id_sector=f"{ID_UBIGEO}{cod_sector}" if cod_sector else None,
+    cod_via=cod_via,
+    id_via=f"{ID_UBIGEO}{cod_via}",
+    nomb_via=nombre_via,
+    tipo_via=tipo_via,
+    peri_grafi=length,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def hab_urb_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  area, perimeter = area_and_length(geometry)
+  area, perimetro = get_area_perimetro(geometry)
   cod_hab_urb = get_value(feature, fields.get("cod_hab_urb"))
   tipo_hab_urb = get_value(feature, fields.get("tipo_hab_urb")) or None
   nomb_hab_urb = get_value(feature, fields.get("nomb_hab_urb"))
@@ -159,42 +159,42 @@ def hab_urb_builder(feature, fields, id_usuario, fecha):
   expediente = get_value(feature, fields.get("expediente")) or None
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return HabilitacionUrbana(
-      id_ubigeo=ID_UBIGEO,
-      cod_hab_urb=cod_hab_urb,
-      id_hab_urb=f"{ID_UBIGEO}{cod_hab_urb}",
-      tipo_hab_urb=tipo_hab_urb,
-      nomb_hab_urb=nomb_hab_urb,
-      etap_hab_urb=etap_hab_urb,
-      expediente=expediente,
-      area_grafi=area,
-      peri_grafi=perimeter,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_hab_urb=cod_hab_urb,
+    id_hab_urb=f"{ID_UBIGEO}{cod_hab_urb}",
+    tipo_hab_urb=tipo_hab_urb,
+    nomb_hab_urb=nomb_hab_urb,
+    etap_hab_urb=etap_hab_urb,
+    expediente=expediente,
+    area_grafi=area,
+    peri_grafi=perimetro,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def comercio_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  area, perimeter = area_and_length(geometry)
+  area, perimetro = get_area_perimetro(geometry)
   cod_piso = get_value(feature, fields.get("cod_piso"))
   cod_lote = get_value(feature, fields.get("cod_lote"))
   id_uni_cat = get_value(feature, fields.get("id_uni_cat"))
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Comercio(
-      id_ubigeo=ID_UBIGEO,
-      cod_piso=cod_piso,
-      cod_lote=cod_lote,
-      id_uni_cat=id_uni_cat,
-      area_grafi=area,
-      peri_grafi=perimeter,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_piso=cod_piso,
+    cod_lote=cod_lote,
+    id_uni_cat=id_uni_cat,
+    area_grafi=area,
+    peri_grafi=perimetro,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def construccion_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  area, perimeter = area_and_length(geometry)
+  area, perimetro = get_area_perimetro(geometry)
   cod_piso = get_value(feature, fields.get("cod_piso"))
   id_lote = get_value(feature, fields.get("id_lote"))
   id_constru = (
@@ -202,35 +202,35 @@ def construccion_builder(feature, fields, id_usuario, fecha):
   )
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Construccion(
-      id_ubigeo=ID_UBIGEO,
-      cod_piso=cod_piso,
-      id_lote=id_lote or None,
-      id_constru=id_constru,
-      area_grafi=area,
-      peri_grafi=perimeter,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_piso=cod_piso,
+    id_lote=id_lote or None,
+    id_constru=id_constru,
+    area_grafi=area,
+    peri_grafi=perimetro,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def parques_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
-  area, perimeter = area_and_length(geometry)
+  area, perimetro = get_area_perimetro(geometry)
   cod_parque = get_value(feature, fields.get("cod_parque"))
   id_lote = get_value(feature, fields.get("id_lote"))
   nomb_parque = get_value(feature, fields.get("nomb_parque")) or None
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Parques(
-      id_ubigeo=ID_UBIGEO,
-      cod_parque=cod_parque,
-      id_parque=f"{ID_UBIGEO}{cod_parque}",
-      id_lote=id_lote,
-      nomb_parque=nomb_parque,
-      area_grafi=area,
-      peri_grafi=perimeter,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_parque=cod_parque,
+    id_parque=f"{ID_UBIGEO}{cod_parque}",
+    id_lote=id_lote,
+    nomb_parque=nomb_parque,
+    area_grafi=area,
+    peri_grafi=perimetro,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 def puerta_builder(feature, fields, id_usuario, fecha):
@@ -240,19 +240,19 @@ def puerta_builder(feature, fields, id_usuario, fecha):
   id_lote = get_value(feature, fields.get("id_lote")) or None
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Puerta(
-      id_ubigeo=ID_UBIGEO,
-      cod_puerta=cod_puerta,
-      id_puerta=f"{ID_UBIGEO}{cod_puerta}",
-      esta_puerta=esta_puerta,
-      id_lote=id_lote,
-      usuario_crea=id_usuario,
-      fecha_crea=fecha,
-      geom=wkt_geom,
+    id_ubigeo=ID_UBIGEO,
+    cod_puerta=cod_puerta,
+    id_puerta=f"{ID_UBIGEO}{cod_puerta}",
+    esta_puerta=esta_puerta,
+    id_lote=id_lote,
+    usuario_crea=id_usuario,
+    fecha_crea=fecha,
+    geom=wkt_geom,
   )
 
 TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
-  "Sectores": TableDefinition(
-    name="Sectores",
+  "Sector": TableDefinition(
+    name="Sector",
     geom_keyword="POLYGON",
     srid=32719,
     specs=(FieldSpec("cod_sector", length=2, numeric=True),),
@@ -262,8 +262,8 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     delete_key="cod_sector",
     builder=sector_builder,
   ),
-  "Manzanas": TableDefinition(
-    name="Manzanas",
+  "Manzana": TableDefinition(
+    name="Manzana",
     geom_keyword="POLYGON",
     srid=32719,
     specs=(
@@ -276,8 +276,8 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     delete_key="cod_sector",
     builder=manzana_builder,
   ),
-  "Lotes": TableDefinition(
-    name="Lotes",
+  "Lote": TableDefinition(
+    name="Lote",
     geom_keyword="POLYGON",
     srid=32719,
     specs=(
@@ -292,8 +292,8 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     delete_key="cod_sector",
     builder=lote_builder,
   ),
-  "EjeVias": TableDefinition(
-    name="EjeVias",
+  "EjeVia": TableDefinition(
+    name="EjeVia",
     geom_keyword="LINE",
     srid=32719,
     specs=(
@@ -340,8 +340,8 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     delete_key="cod_lote",
     builder=comercio_builder,
   ),
-  "Construcciones": TableDefinition(
-    name="Construcciones",
+  "Construccion": TableDefinition(
+    name="Construccion",
     geom_keyword="POLYGON",
     srid=32719,
     specs=(
@@ -431,8 +431,8 @@ def move_to_history(existing: list, historico_model, id_usuario, fecha):
       historico = historico_model.from_construccion(record, id_usuario, fecha)
     elif hasattr(historico_model, "from_parques"):
       historico = historico_model.from_parques(record, id_usuario, fecha)
-    elif hasattr(historico_model, "from_hab_urb"):
-      historico = historico_model.from_hab_urb(record, id_usuario, fecha)
+    elif hasattr(historico_model, "from_habilitacion_urbana"):
+      historico = historico_model.from_habilitacion_urbana(record, id_usuario, fecha)
     elif hasattr(historico_model, "from_puerta"):
       historico = historico_model.from_puerta(record, id_usuario, fecha)
     if historico is not None:
@@ -443,7 +443,7 @@ geodata_bp = Blueprint("geodata", __name__, url_prefix="/")
 
 @geodata_bp.route("/")
 def inicio():
-  return "API - GIS - MDW 2025 - 04/12/2025"
+  return "🟢 API - GIS - MDW 2025 - 04/12/2025"
 
 @geodata_bp.route("/subir_shapefile", methods=["POST"])
 def subir_shapefile():

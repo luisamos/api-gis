@@ -50,7 +50,7 @@ class HabilitacionUrbanaHistorico(db.Model):
   fecha_modifica = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
   @classmethod
-  def from_hab_urb(cls, hu, usuario_modifica, fecha_modifica):
+  def from_habilitacion_urbana(cls, hu, usuario_modifica, fecha_modifica):
     return cls(
       gid=hu.gid,
       id_ubigeo=hu.id_ubigeo,
@@ -61,7 +61,7 @@ class HabilitacionUrbanaHistorico(db.Model):
       etap_hab_urb = hu.etap_hab_urb,
       expediente = hu.expediente,
       area_grafi = hu.area_grafi,
-      peri_grafi = hu.peri_grafi
+      peri_grafi = hu.peri_grafi,
       usuario_crea=hu.usuario_crea,
       fecha_crea=hu.fecha_crea,
       geom=hu.geom,
