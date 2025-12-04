@@ -16,13 +16,15 @@ class HabilitacionUrbana(db.Model):
       autoincrement=True,
   )
   id_ubigeo = db.Column(db.String(6))
-  id_hab_urba = db.Column(db.String(10))
-  cod_hab_urba = db.Column(db.String(4))
-  tipo_hab_urba = db.Column(db.String(10))
-  nomb_hab_urba = db.Column(db.String(200))
+  cod_hab_urb = db.Column(db.String(4))
+  id_hab_urb = db.Column(db.String(10))
+  tipo_hab_urb = db.Column(db.String(10))
+  nomb_hab_urb = db.Column(db.String(200))
+  etap_hab_urb = db.Column(db.String(200))
+  expediente = db.Column(db.String(500))
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
-  geom = db.Column(Geometry(geometry_type="LINESTRING", srid=32719))
+  geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
 
 class HabilitacionUrbanaHistorico(db.Model):
   __tablename__ = "tgh_hab_urb"
@@ -31,10 +33,12 @@ class HabilitacionUrbanaHistorico(db.Model):
   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
   gid = db.Column(db.Integer)
   id_ubigeo = db.Column(db.String(6))
-  id_hab_urba = db.Column(db.String(10))
-  cod_hab_urba = db.Column(db.String(4))
-  tipo_hab_urba = db.Column(db.String(10))
-  nomb_hab_urba = db.Column(db.String(200))
+  cod_hab_urb = db.Column(db.String(4))
+  id_hab_urb = db.Column(db.String(10))
+  tipo_hab_urb = db.Column(db.String(10))
+  nomb_hab_urb = db.Column(db.String(200))
+  etap_hab_urb = db.Column(db.String(200))
+  expediente = db.Column(db.String(500))
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
@@ -42,17 +46,19 @@ class HabilitacionUrbanaHistorico(db.Model):
   fecha_modifica = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
   @classmethod
-  def from_hab_urb(cls, hab_urba, usuario_modifica, fecha_modifica):
+  def from_hab_urb(cls, hu, usuario_modifica, fecha_modifica):
     return cls(
-      gid=hab_urba.gid,
-      id_ubigeo=hab_urba.id_ubigeo,
-      id_hab_urba=hab_urba.id_sector,
-      cod_hab_urba=hab_urba.id_via,
-      tipo_hab_urba=hab_urba.cod_via,
-      nomb_hab_urba=hab_urba.nomb_via,
-      usuario_crea=hab_urba.usuario_crea,
-      fecha_crea=hab_urba.fecha_crea,
-      geom=hab_urba.geom,
+      gid=hu.gid,
+      id_ubigeo=hu.id_ubigeo,
+      cod_hab_urb=hu.cod_hab_urb,
+      id_hab_urb=hu.id_hab_urb,
+      tipo_hab_urb=hu.tipo_hab_urb,
+      nomb_hab_urb=hu.nomb_hab_urb,
+      etap_hab_urb = hu.etap_hab_urb,
+      expediente = hu.expediente,
+      usuario_crea=hu.usuario_crea,
+      fecha_crea=hu.fecha_crea,
+      geom=hu.geom,
       usuario_modifica=usuario_modifica,
       fecha_modifica=fecha_modifica,
     )

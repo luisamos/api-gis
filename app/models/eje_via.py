@@ -16,11 +16,11 @@ class EjeVia(db.Model):
       autoincrement=True,
   )
   id_ubigeo = db.Column(db.String(6))
+  cod_sector = db.Column(db.String(2))
   id_sector = db.Column(db.String(8))
   cod_via = db.Column(db.String(6))
   id_via = db.Column(db.String(12))
   nomb_via = db.Column(db.String(200))
-  #tipo_via = db.Column(db.String(200))
   peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
@@ -31,13 +31,12 @@ class EjeViaHistorico(db.Model):
   __table_args__ = {"schema": "geo"}
 
   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-  gid = db.Column(db.Integer)
   id_ubigeo = db.Column(db.String(6))
+  cod_sector = db.Column(db.String(2))
   id_sector = db.Column(db.String(8))
   cod_via = db.Column(db.String(6))
   id_via = db.Column(db.String(12))
   nomb_via = db.Column(db.String(200))
-  #tipo_via = db.Column(db.String(200))
   peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
@@ -50,11 +49,11 @@ class EjeViaHistorico(db.Model):
     return cls(
       gid=eje_via.gid,
       id_ubigeo=eje_via.id_ubigeo,
+      cod_sector=eje_via.cod_sector,
       id_sector=eje_via.id_sector,
       id_via=eje_via.id_via,
       cod_via=eje_via.cod_via,
       nomb_via=eje_via.nomb_via,
-      #tipo_via=eje_via.tipo_via,
       peri_grafi=eje_via.peri_grafi,
       usuario_crea=eje_via.usuario_crea,
       fecha_crea=eje_via.fecha_crea,
