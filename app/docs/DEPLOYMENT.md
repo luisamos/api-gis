@@ -47,7 +47,7 @@ APP_PORT=5000
 
 ## 3. Servicio systemd con gunicorn
 
-Crea el archivo `/etc/systemd/system/geocatastro.service` (como `root`):
+Crea el archivo `nano /etc/systemd/system/geocatastro.service` (como `root`):
 
 ```ini
 [Unit]
@@ -72,17 +72,27 @@ ExecStart=/apps/venv/api-gis/bin/gunicorn \
   --workers 3 \
   --bind unix:/run/geocatastro/geocatastro.sock \
   --timeout 90 \
+  --log-level info \
+  --access-logfile /apps/www/api-gis/logs/access.log \
+  --error-logfile /apps/www/api-gis/logs/error.log \
   "app:create_app()"
 
 Restart=always
 
-# Aquí está el cambio importante:
 # systemd creará /run/geocatastro con estos permisos
 RuntimeDirectory=geocatastro
 RuntimeDirectoryMode=0755
 
 [Install]
 WantedBy=multi-user.target
+```
+
+Crear el directorio de logs:
+
+```bash
+sudo mkdir -p /apps/www/api-gis/logs
+sudo chown -R www-data:www-data /apps/www/api-gis/logs
+sudo chmod 755 /apps/www/api-gis/logs
 ```
 
 Activa el servicio:
@@ -99,6 +109,7 @@ Si presenta algún error:
 sudo systemctl stop geocatastro
 sudo rm -f /run/geocatastro.sock /run/geocatastro/geocatastro.sock 2>/dev/null
 sudo systemctl start geocatastro
+sudo systemctl restart geocatastro
 sudo systemctl status geocatastro --no-pager
 
 sudo journalctl -u geocatastro -f
@@ -132,6 +143,9 @@ En tu VirtualHost de `catastro.muniwanchaq.gob.pe` agrega las directivas de prox
 
 ```bash
 sudo a2enmod proxy proxy_http headers
+```
+
+```bash
 sudo systemctl reload apache2
 ```
 
@@ -156,6 +170,8 @@ sudo systemctl reload apache2
 1. Comprueba que gunicorn esté escuchando:
    ```bash
    sudo systemctl status geocatastro.service
+   ```
+   ```bash
    curl http://127.0.0.1:5000/api-gi/health  # Ajusta con la ruta real que exponga el API
    ```
 2. Desde otra máquina, valida el acceso HTTPS (Apache):
