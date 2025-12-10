@@ -443,7 +443,7 @@ geodata_bp = Blueprint("geodata", __name__, url_prefix="/")
 
 @geodata_bp.route("/")
 def inicio():
-  return "🟢 API - GIS - MDW 2025 - 04/12/2025"
+  return "🟢 API - GIS - MDW 2025 - 10/12/2025"
 
 @geodata_bp.route("/subir_shapefile", methods=["POST"])
 def subir_shapefile():

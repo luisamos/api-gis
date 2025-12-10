@@ -1,4 +1,4 @@
-# Guía de despliegue en Ubuntu 24.04
+# Guía de despliegue en Ubuntu 24.04 en adelante
 
 Este documento describe cómo ejecutar **API-GIS** en un servidor Ubuntu 24.04 utilizando Python 3.12, `gunicorn` y Apache como proxy inverso escuchando en HTTPS (puerto 443) y reenviando las peticiones al servicio Python en el puerto 5000.
 
@@ -58,12 +58,16 @@ After=network.target
 User=www-data
 Group=www-data
 WorkingDirectory=/apps/www/api-gis
+
+# Cargar variables desde .env (debe ser legible por www-data)
 EnvironmentFile=/apps/www/api-gis/.env
+
 Environment="APP_HOST=0.0.0.0"
 Environment="APP_PORT=5000"
 Environment="PATH=/apps/venv/api-gis/bin"
 
 UMask=007
+
 ExecStart=/apps/venv/api-gis/bin/gunicorn \
   --workers 3 \
   --bind unix:/run/geocatastro/geocatastro.sock \
@@ -71,8 +75,11 @@ ExecStart=/apps/venv/api-gis/bin/gunicorn \
   "app:create_app()"
 
 Restart=always
-RuntimeDirectory=api-gis
-RuntimeDirectoryModce=0755
+
+# Aquí está el cambio importante:
+# systemd creará /run/geocatastro con estos permisos
+RuntimeDirectory=geocatastro
+RuntimeDirectoryMode=0755
 
 [Install]
 WantedBy=multi-user.target
@@ -99,7 +106,27 @@ sudo journalctl -u geocatastro -f
 
 El servicio quedará escuchando en `http://127.0.0.1:5000/` (o en la IP del servidor si abres el puerto).
 
-## 4. Integración con Apache (VirtualHost SSL existente)
+## 4. Dar permisos a www-data en uploads/
+
+Crear los directorios si no existen
+
+```bash
+sudo mkdir -p /apps/www/api-gis/uploads/tmp
+```
+
+Dar propiedad al usuario del servicio (www-data)
+
+```bash
+sudo chown -R www-data:www-data /apps/www/api-gis/uploads
+```
+
+Permisos razonables (rwx para dueño y grupo, r-x para otros, ajusta si quieres)
+
+```bash
+sudo chmod -R 775 /apps/www/api-gis/uploads
+```
+
+## 5. Integración con Apache (VirtualHost SSL existente)
 
 En tu VirtualHost de `catastro.muniwanchaq.gob.pe` agrega las directivas de proxy para reenviar las peticiones hacia el puerto 5000. Antes habilita los módulos necesarios:
 
@@ -114,22 +141,22 @@ Dentro del bloque `<VirtualHost *:443>` añade, por ejemplo, un sub-ruta `/api-g
 # --- API-GIS en el puerto 5000 ---
 ProxyPreserveHost On
 RequestHeader set X-Forwarded-Proto "https"
-ProxyPass        /api-gis/ http://127.0.0.1:5000/
-ProxyPassReverse /api-gis/ http://127.0.0.1:5000/
+ProxyPass        /api-gis/ unix:/run/geocatastro/geocatastro.sock|http://127.0.0.1/
+ProxyPassReverse /api-gis/ unix:/run/geocatastro/geocatastro.sock|http://127.0.0.1/
 ```
 
-Si prefieres exponer todo el VirtualHost directamente al API, cambia `DocumentRoot` por `ProxyPass / http://127.0.0.1:5000/`. Después de editar, recarga Apache:
+Reiniciar el servicio:
 
 ```bash
 sudo systemctl reload apache2
 ```
 
-## 5. Verificación
+## 6. Verificación
 
 1. Comprueba que gunicorn esté escuchando:
    ```bash
    sudo systemctl status geocatastro.service
-   curl http://127.0.0.1:5000/health  # Ajusta con la ruta real que exponga el API
+   curl http://127.0.0.1:5000/api-gi/health  # Ajusta con la ruta real que exponga el API
    ```
 2. Desde otra máquina, valida el acceso HTTPS (Apache):
    ```bash
@@ -138,7 +165,7 @@ sudo systemctl reload apache2
 
 Con estos pasos la aplicación queda desplegada en Ubuntu 24.04, atendiendo internamente en el puerto 5000 y expuesta de forma segura mediante tu VirtualHost SSL en Apache.
 
-## 6. Solución de problemas comunes
+## 7. Solución de problemas comunes
 
 ### El servicio `geocatastro.service` falla con `status=3`
 
