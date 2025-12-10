@@ -8,10 +8,12 @@ app = create_app()
 if __name__ == "__main__":
   if IS_DEV:
     print("🔴 [DESAROLLO] - MDW | API-GIS")
+    host = "127.0.0.2"
+
   else:
     print("🟢 MDW | API-GIS")
+    host = os.getenv("APP_HOST","0.0.0.0")
 
-  host = os.getenv("APP_HOST", "127.0.0.2" if IS_DEV else "0.0.0.0")
   port = int(os.getenv("APP_PORT", 5000))
 
   app.run(

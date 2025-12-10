@@ -27,6 +27,13 @@ def prepare_directories(base_dir: Path) -> Dict[str, str]:
 def create_app() -> Flask:
   app = Flask(__name__)
 
+  if(IS_DEV):
+    CORS(app, resources={
+        r"/api-gis/*": {
+            "origins": "http://127.0.0.2:5173"
+        }
+    })
+
   base_dir = Path(__file__).resolve().parent.parent
 
   directories = prepare_directories(base_dir)

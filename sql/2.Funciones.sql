@@ -15,7 +15,6 @@ a.cod_sector,
 a.cod_mzna,
 a.cod_sector || a.cod_mzna || a.cod_lote AS lotes_id,
 a.cod_lote,
-b.
 CASE
 	WHEN b.id_lote IS NULL AND c.imagen_plano IS NULL THEN 0
 	WHEN b.id_lote IS NULL AND c.imagen_plano IS NOT NULL THEN 1
