@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Dict
@@ -24,14 +25,29 @@ def prepare_directories(base_dir: Path) -> Dict[str, str]:
     "TMP_DIR": str(tmp_dir),
   }
 
+def configure_logging():
+  log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+
+  logging.basicConfig(
+    level=log_level,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+  )
+
+  logging.getLogger("werkzeug").setLevel(log_level)
+
+  return log_level
+
 def create_app() -> Flask:
   app = Flask(__name__)
 
+  configured_level = configure_logging()
+  app.logger.setLevel(configured_level)
+
   if(IS_DEV):
     CORS(app, resources={
-        r"/api-gis/*": {
-            "origins": "http://127.0.0.2:5173"
-        }
+      r"/api-gis/*": {
+          "origins": "http://127.0.0.2:5173"
+      }
     })
 
   base_dir = Path(__file__).resolve().parent.parent
