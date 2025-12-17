@@ -545,6 +545,7 @@ def validar_shapefile():
           "reporte": reporte,
         }
       ),
+      400,
     )
 
   metadata = {
