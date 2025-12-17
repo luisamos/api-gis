@@ -41,6 +41,7 @@ from app.routes.shapefile_utils import (
   handle_shapefile_upload,
   load_metadata,
   open_shapefile_layer,
+  describe_validation_errors,
   store_metadata,
   validate_fields,
 )
@@ -133,7 +134,7 @@ def eje_via_builder(feature, fields, id_usuario, fecha):
   cod_sector = get_value(feature, fields.get("cod_sector"))
   cod_via = get_value(feature, fields.get("cod_via"))
   nombre_via = get_value(feature, fields.get("nomb_via"))
-  tipo_via = get_value(feature, fields.get("tipo_via")) or None
+  
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return EjeVia(
     id_ubigeo=ID_UBIGEO,
@@ -142,7 +143,7 @@ def eje_via_builder(feature, fields, id_usuario, fecha):
     cod_via=cod_via,
     id_via=f"{ID_UBIGEO}{cod_via}",
     nomb_via=nombre_via,
-    tipo_via=tipo_via,
+    
     peri_grafi=perimetro,
     usuario_crea=id_usuario,
     fecha_crea=fecha,
@@ -299,8 +300,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     specs=(
       FieldSpec("cod_sector", length=2, numeric=True, required=True),
       FieldSpec("cod_via", length=6, numeric=True),
-      FieldSpec("nomb_via", required=True),
-      FieldSpec("tipo_via", required=False),
+      FieldSpec("nomb_via", required=True),      
     ),
     report_key="cod_sector",
     model=EjeVia,
@@ -316,10 +316,8 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
       FieldSpec("cod_hab_urb", length=4, numeric=True),
       FieldSpec("tipo_hab_urb", required=False),
       FieldSpec("nomb_hab_urb", required=True),
-      FieldSpec("etap_hab_urb", required=False),
-      FieldSpec("expediente", required=False),
     ),
-    report_key="cod_hab_urb",
+    report_key="tipo_hab_urb",
     model=HabilitacionUrbana,
     historico_model=HabilitacionUrbanaHistorico,
     delete_key="cod_hab_urb",
@@ -527,6 +525,8 @@ def validar_shapefile():
     layer, field_map, specs_to_validate, table_def.report_key
   )
 
+  errores_detallados = describe_validation_errors(errores, specs_to_validate)
+
   reporte = [
     {table_def.report_key: clave, "totalRegistros": total}
     for clave, total in sorted(contador.items())
@@ -541,11 +541,10 @@ def validar_shapefile():
         {
           "estado": False,
           "mensaje": "Se encontraron errores en los códigos del shapefile",
-          "errores": errores,
+          "errores": errores_detallados,
           "reporte": reporte,
         }
       ),
-      400,
     )
 
   metadata = {
@@ -623,7 +622,7 @@ def cargar_shapefile():
       500,
     )
 
-  fields = extract_fields(metadata, [spec.key for spec in table_def.specs])
+  fields = extract_fields(metadata, table_def.specs)
   if not fields:
     datasource = None
     layer = None

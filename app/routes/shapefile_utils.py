@@ -298,6 +298,45 @@ def validate_fields(layer, field_map: Dict[str, str], specs: Iterable[FieldSpec]
 
   return cleaned_errors, empty_records, counter
 
+
+def describe_validation_errors(
+  errors: Dict[str, list[int]], specs: Iterable[FieldSpec]
+) -> Dict[str, Dict[str, object]]:
+  """Return a detailed description for each entry in ``errors``.
+
+  The resulting mapping contains the indices of the invalid records and a
+  human-friendly message explaining what needs to be corrected.
+  """
+
+  spec_lookup = {spec.key: spec for spec in specs}
+
+  def build_message(spec: FieldSpec | None, key: str) -> str:
+    if spec is None:
+      return f"Revisar los valores del campo {key}."
+
+    requisitos: list[str] = []
+    if spec.required:
+      requisitos.append("no estar vacío")
+    if spec.numeric:
+      requisitos.append("contener solo números")
+    if spec.length is not None:
+      requisitos.append(f"tener {spec.length} caracteres")
+
+    if not requisitos:
+      return f"Revisar los valores del campo {spec.key}."
+
+    if len(requisitos) == 1:
+      descripcion = requisitos[0]
+    else:
+      descripcion = ", ".join(requisitos[:-1]) + f" y {requisitos[-1]}"
+
+    return f"El campo {spec.key} debe {descripcion}."
+
+  return {
+    key: {"indices": indices, "mensaje": build_message(spec_lookup.get(key), key)}
+    for key, indices in errors.items()
+  }
+
 def load_metadata(metadata_path: Path) -> Optional[dict]:
   """Return metadata stored at *metadata_path* if it exists."""
 
@@ -318,27 +357,31 @@ def store_metadata(metadata_path: Path, metadata: dict) -> None:
 
 def extract_fields(
   metadata: dict,
-  required_keys: Iterable[str],
+  specs: Iterable[FieldSpec],
   legacy_mapping: Optional[Dict[str, str]] = None,
   ) -> Optional[Dict[str, str]]:
-  """Extract the field mapping from *metadata* ensuring all keys exist."""
+  """Extract field mapping ensuring required fields are present.
 
-  required = list(required_keys)
+  Optional fields are included when present in *metadata* but do not block
+  extraction when absent.
+  """
+
   fields: Dict[str, Optional[str]] = metadata.get("fields", {})
+  resolved: Dict[str, Optional[str]] = {}
 
-  resolved = {key: fields.get(key) for key in required}
+  for spec in specs:
+      field_name = fields.get(spec.key)
 
-  if all(resolved.values()):
-      return resolved  # type: ignore[return-value]
+      if not field_name and legacy_mapping:
+          legacy_key = legacy_mapping.get(spec.key)
+          if legacy_key:
+              field_name = metadata.get(legacy_key)
 
-  if legacy_mapping:
-      for key in required:
-          if not resolved.get(key):
-              legacy_key = legacy_mapping.get(key)
-              if legacy_key:
-                  resolved[key] = metadata.get(legacy_key)
+      if not field_name:
+          if spec.required:
+              return None
+          continue
 
-  if all(resolved.values()):
-      return resolved  # type: ignore[return-value]
+      resolved[spec.key] = field_name
 
-  return None
+  return resolved  # type: ignore[return-value]

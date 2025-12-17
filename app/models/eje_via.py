@@ -31,6 +31,7 @@ class EjeViaHistorico(db.Model):
   __table_args__ = {"schema": "geo"}
 
   id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  gid = db.Column(db.Integer)
   id_ubigeo = db.Column(db.String(6))
   cod_sector = db.Column(db.String(2))
   id_sector = db.Column(db.String(8))

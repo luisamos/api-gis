@@ -16,21 +16,33 @@ def prepare_directories(base_dir: Path) -> Dict[str, str]:
 
   uploads_dir = Path(os.getenv("UPLOADS_DIR", base_dir / "uploads"))
   tmp_dir = Path(os.getenv("TMP_DIR", uploads_dir / "tmp"))
+  logs_dir = Path(os.getenv("LOGS_DIR", base_dir / "logs"))
 
   uploads_dir.mkdir(parents=True, exist_ok=True)
   tmp_dir.mkdir(parents=True, exist_ok=True)
+  logs_dir.mkdir(parents=True, exist_ok=True)
 
   return {
     "UPLOADS_DIR": str(uploads_dir),
     "TMP_DIR": str(tmp_dir),
+    "LOGS_DIR": str(logs_dir),
   }
 
 def configure_logging():
   log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
+  base_dir = Path(__file__).resolve().parent.parent
+  logs_dir = Path(os.getenv("LOGS_DIR", base_dir / "logs"))
+  logs_dir.mkdir(parents=True, exist_ok=True)
+  log_file = logs_dir / "app.log"
+
   logging.basicConfig(
     level=log_level,
     format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+    handlers=[
+      logging.StreamHandler(),
+      logging.FileHandler(log_file, encoding="utf-8"),
+    ],
   )
 
   logging.getLogger("werkzeug").setLevel(log_level)
