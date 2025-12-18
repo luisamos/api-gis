@@ -241,16 +241,25 @@ def validate_fields(layer, field_map: Dict[str, str], specs: Iterable[FieldSpec]
   """Validate the values of the fields defined in *field_map*.
 
   Returns a tuple ``(errores, registros_vacios, contador)`` where ``errores`` is a
-  dictionary mapping field keys to invalid record indices, ``registros_vacios``
+  dictionary mapping field keys to invalid record identifiers (``id`` or
+  ``objectid`` when present, otherwise the row index), ``registros_vacios``
   contains the indices of rows where all tracked fields are empty, and
   ``contador`` summarises the occurrences by the field indicated in
   ``report_key``.
   """
 
   specs_list = list(specs)
-  errors: Dict[str, set[int]] = {spec.key: set() for spec in specs_list}
+  errors: Dict[str, set[int | str]] = {spec.key: set() for spec in specs_list}
   empty_records: list[int] = []
   counter: Counter[str] = Counter()
+
+  identifier_field = find_field(layer, "id") or find_field(layer, "objectid")
+
+  def get_identifier(feature, default: int) -> int | str:
+      if not identifier_field:
+          return default
+      identifier_value = feature.GetField(identifier_field)
+      return identifier_value if identifier_value not in (None, "") else default
 
   layer.ResetReading()
   feature = layer.GetNextFeature()
@@ -270,18 +279,20 @@ def validate_fields(layer, field_map: Dict[str, str], specs: Iterable[FieldSpec]
           index += 1
           continue
 
+      identifier = get_identifier(feature, index)
+
       for spec in specs_list:
           value = values[spec.key]
           if not value:
               if spec.required:
-                  errors[spec.key].add(index)
+                  errors[spec.key].add(identifier)
               continue
 
           if spec.numeric and not value.isdigit():
-              errors[spec.key].add(index)
+              errors[spec.key].add(identifier)
 
           if spec.length is not None and len(value) != spec.length:
-              errors[spec.key].add(index)
+              errors[spec.key].add(identifier)
 
       report_value = values.get(report_key, "")
       if report_value:
@@ -293,18 +304,18 @@ def validate_fields(layer, field_map: Dict[str, str], specs: Iterable[FieldSpec]
       index += 1
 
   cleaned_errors = {
-      key: sorted(indices) for key, indices in errors.items() if indices
+      key: sorted(indices, key=str) for key, indices in errors.items() if indices
   }
 
   return cleaned_errors, empty_records, counter
 
 
 def describe_validation_errors(
-  errors: Dict[str, list[int]], specs: Iterable[FieldSpec]
+  errors: Dict[str, list[int | str]], specs: Iterable[FieldSpec]
 ) -> Dict[str, Dict[str, object]]:
   """Return a detailed description for each entry in ``errors``.
 
-  The resulting mapping contains the indices of the invalid records and a
+  The resulting mapping contains the identifiers of the invalid records and a
   human-friendly message explaining what needs to be corrected.
   """
 
@@ -333,7 +344,7 @@ def describe_validation_errors(
     return f"El campo {spec.key} debe {descripcion}."
 
   return {
-    key: {"indices": indices, "mensaje": build_message(spec_lookup.get(key), key)}
+    key: {"id": indices, "mensaje": build_message(spec_lookup.get(key), key)}
     for key, indices in errors.items()
   }
 

@@ -344,9 +344,9 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     srid=32719,
     specs=(
       FieldSpec("cod_piso", length=2, numeric=True),
-      FieldSpec("id_lote", required=False),
+      FieldSpec("id_lote", required=True),
     ),
-    report_key="cod_piso",
+    report_key="id_lote",
     model=Construccion,
     historico_model=ConstruccionHistorico,
     delete_key="cod_piso",
