@@ -9,7 +9,7 @@ from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Callable, Dict, Iterable, Optional, Tuple
 
 from flask import current_app, jsonify
 
@@ -237,15 +237,21 @@ def get_layer_srid(layer, expected_epsg: Optional[int] = None) -> Optional[str]:
 
   return None
 
-def validate_fields(layer, field_map: Dict[str, str], specs: Iterable[FieldSpec], report_key: str):
+def validate_fields(
+  layer,
+  field_map: Dict[str, str],
+  specs: Iterable[FieldSpec],
+  report_key: str,
+  report_transform: Optional[Callable[[Dict[str, str]], str]] = None,
+):
   """Validate the values of the fields defined in *field_map*.
 
-  Returns a tuple ``(errores, registros_vacios, contador)`` where ``errores`` is a
-  dictionary mapping field keys to invalid record identifiers (``id`` or
-  ``objectid`` when present, otherwise the row index), ``registros_vacios``
-  contains the indices of rows where all tracked fields are empty, and
-  ``contador`` summarises the occurrences by the field indicated in
-  ``report_key``.
+  Returns a tuple ``(errores, registros_vacios, contador)`` where ``errores`` is a␊
+  dictionary mapping field keys to invalid record identifiers (``id`` or␊
+  ``objectid`` when present, otherwise the row index), ``registros_vacios``␊
+  contains the indices of rows where all tracked fields are empty, and␊
+  ``contador`` summarises the occurrences by the field indicated in␊
+  ``report_key`` (or the value returned by ``report_transform`` when provided).
   """
 
   specs_list = list(specs)
@@ -294,7 +300,11 @@ def validate_fields(layer, field_map: Dict[str, str], specs: Iterable[FieldSpec]
           if spec.length is not None and len(value) != spec.length:
               errors[spec.key].add(identifier)
 
-      report_value = values.get(report_key, "")
+      report_value = (
+        report_transform(values)
+        if report_transform is not None
+        else values.get(report_key, "")
+      )
       if report_value:
           counter[report_value] += 1
       else:

@@ -1,0 +1,9 @@
+{
+  "validado": true,
+  "fields": {
+    "cod_piso": "codi_piso",
+    "id_lote": "id_lote"
+  },
+  "tabla": "Construccion",
+  "fechaValidacion": "2025-12-18T15:48:49.406345"
+}

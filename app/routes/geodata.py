@@ -57,6 +57,7 @@ class TableDefinition:
   historico_model : Type
   delete_key: str
   builder: Callable
+  report_transform: Optional[Callable[[Dict[str, str]], str]] = None
 
 def get_value(feature, field_name: Optional[str]) -> str:
   if not field_name:
@@ -199,7 +200,7 @@ def construccion_builder(feature, fields, id_usuario, fecha):
   cod_piso = get_value(feature, fields.get("cod_piso"))
   id_lote = get_value(feature, fields.get("id_lote"))
   id_constru = (
-      f"{ID_UBIGEO}{id_lote}{cod_piso}" if cod_piso and id_lote else None
+      f"{id_lote}{cod_piso}" if cod_piso and id_lote else None
   )
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Construccion(
@@ -213,6 +214,13 @@ def construccion_builder(feature, fields, id_usuario, fecha):
     fecha_crea=fecha,
     geom=wkt_geom,
   )
+
+def construccion_report_transform(values: Dict[str, str]) -> str:
+  id_lote = values.get("id_lote", "")
+  if len(id_lote) < 8:
+    return ""
+  return id_lote[6:8]
+
 
 def parques_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
@@ -347,6 +355,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
       FieldSpec("id_lote", required=True),
     ),
     report_key="id_lote",
+    report_transform=construccion_report_transform,
     model=Construccion,
     historico_model=ConstruccionHistorico,
     delete_key="cod_piso",
@@ -361,7 +370,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
       FieldSpec("id_lote", required=True),
       FieldSpec("nomb_parque", required=False),
     ),
-    report_key="cod_parque",
+    report_key="id_lote",
     model=Parques,
     historico_model=ParquesHistorico,
     delete_key="cod_parque",
@@ -376,7 +385,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
       FieldSpec("id_lote", required=False),
       FieldSpec("esta_puerta", required=False),
     ),
-    report_key="cod_puerta",
+    report_key="id_lote",
     model=Puerta,
     historico_model=PuertaHistorico,
     delete_key="cod_puerta",
@@ -441,7 +450,7 @@ geodata_bp = Blueprint("geodata", __name__, url_prefix="/")
 
 @geodata_bp.route("/")
 def inicio():
-  return "🟢 API - GIS - MDW 2025 - 10/12/2025"
+  return "🟢 API - GIS - MDW 2025 - 18/12/2025"
 
 @geodata_bp.route("/subir_shapefile", methods=["POST"])
 def subir_shapefile():
@@ -522,7 +531,7 @@ def validar_shapefile():
 
   specs_to_validate = [spec for spec in table_def.specs if spec.key in field_map]
   errores, registros_vacios, contador = validate_fields(
-    layer, field_map, specs_to_validate, table_def.report_key
+    layer, field_map, specs_to_validate, table_def.report_key, table_def.report_transform
   )
 
   errores_detallados = describe_validation_errors(errores, specs_to_validate)
