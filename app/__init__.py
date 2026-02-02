@@ -79,7 +79,7 @@ def create_app() -> Flask:
     JWT_REFRESH_TOKEN_EXPIRES=timedelta(days=1),
     JWT_COOKIE_CSRF_PROTECT=True,
     JWT_COOKIE_SAMESITE="Lax",
-    JWT_SECRET_KEY="VSzpW2$!7FHosVi47uvJbY",
+    JWT_SECRET_KEY="0vShg$9xQfU4t1cN2bZ8mP6wLrE7yK5jH3dS1aX9nQ4tG6pB8zV2",
     JWT_COOKIE_HTTPONLY=True,
     **directories,
   )
