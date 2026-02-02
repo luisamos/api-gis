@@ -1,0 +1,93 @@
+id,name,description,guard_name,categoria,created_at,updated_at
+1,ficha.editrentasindividual,Editar Codigo de Contribuyente,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+2,dashboard,Ver Estadisticas,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+3,user.index,Ver la lista de Usuarios,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+4,user.create,Crear Usuarios,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+5,user.destroy,Cambiar estado de Usuarios,web,Eliminar,2024-11-13 07:39:30,2024-11-13 07:39:30
+6,user.show,Mostrar Usuarios,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+7,user.edit,Editar Usuarios,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+8,roles.index,Ver la lista de Roles,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+9,roles.edit,Editar Roles,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+10,roles.destroy,Eliminar Roles,web,Eliminar,2024-11-13 07:39:30,2024-11-13 07:39:30
+11,roles.create,Crear Roles,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+12,manzana.index,Ver la lista de Manzanas,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+13,manzana.edit,Editar datos de Manzanas,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+14,manzana.destroy,Cambiar estado de Usuarios,web,Eliminar,2024-11-13 07:39:30,2024-11-13 07:39:30
+15,manzana.create,Crear Manzanas,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+16,sectore.index,Ver la lista de Sectores,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+17,sectore.edit,Editar la lista de Sectores,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+18,sectore.destroy,Cambiar estado de Sectores,web,Eliminar,2024-11-13 07:39:30,2024-11-13 07:39:30
+19,sectore.create,Crear Sectores,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+20,haburbana.index,Ver la lista de Habilitaciones Urbanas,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+21,haburbana.edit,Editar datos de Habilitaciones Urbanas,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+22,haburbana.destroy,Cambiar estado de Habilitaciones Urbanas,web,Eliminar,2024-11-13 07:39:30,2024-11-13 07:39:30
+23,haburbana.create,Crear Habilitaciones Urbanas,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+24,vias.index,Ver la lista de Vias,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+25,vias.edit,Editar datos de Vias,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+26,vias.destroy,Cambiar estado de Vias,web,Eliminar,2024-11-13 07:39:30,2024-11-13 07:39:30
+27,vias.create,Crear Vias,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+28,notaria.index,Ver Notaria,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+29,notaria.edit,Editar datos de Notaria,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+30,notaria.destroy,Cambiar estado de Notaria,web,Eliminar,2024-11-13 07:39:30,2024-11-13 07:39:30
+31,notaria.create,Crear Notaria,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+32,reporte.index,Vista de Reportes,web,Reportes,2024-11-13 07:39:30,2024-11-13 07:39:30
+33,lineatiempo,Ver Linea Tiempo Fichas,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+34,progresofichas,Ver Progreso de Fichas,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+35,persona.edit,Editar datos de Persona,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+36,supervisor.edit,Editar datos de Supervisor,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+37,tecnicos.edit,Editar datos de Tecnicos,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+38,verificadores.edit,Editar datos de Verificadores,web,Editar,2024-11-13 07:39:30,2024-11-13 07:39:30
+39,persona.create,Crear Persona,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+40,supervisor.create,Crear Supervisor,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+41,tecnicos.create,Crear Tecnicos,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+42,verificadores.create,Crear Verificadores,web,Crear,2024-11-13 07:39:30,2024-11-13 07:39:30
+43,mantenimiento.supervisores,Ver lista de Supervisores,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+44,mantenimiento.tecnicos,Ver lista de Tecnicos,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+45,mantenimiento.verificadores,Ver lista de Verificadores,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+46,pdf.individual,Ver Pdf de Ficha Individual,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+47,pdf.cotitularidad,Ver Pdf de Ficha Cotitularidad,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+48,pdf.economica,Ver Pdf de Ficha Economica,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+49,pdf.bienescomunes,Ver Pdf de Ficha Bienes Comunes,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+50,pdf.informativa,Ver Pdf de Ficha Informativa,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+51,pdf.bienesculturales,Ver Pdf de Ficha Bienes Culturales,web,Ver,2024-11-13 07:39:30,2024-11-13 07:39:30
+52,pdf.rural,Ver Pdf de Ficha Rural,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+53,ficha.createcotitularidad,Crear Ficha Cotitularidad,web,Crear,2024-11-13 07:39:31,2024-11-13 07:39:31
+54,ficha.editcotitularidad,Editar Ficha Cotitularidad,web,Editar,2024-11-13 07:39:31,2024-11-13 07:39:31
+55,ficha.editcultural,Editar Ficha Bien Cultural,web,Editar,2024-11-13 07:39:31,2024-11-13 07:39:31
+56,ficha.destroycotitularidad,Eliminar Ficha Cotitularidad,web,Eliminar,2024-11-13 07:39:31,2024-11-13 07:39:31
+57,ficha.editeconomica,Editar Ficha Economica,web,Editar,2024-11-13 07:39:31,2024-11-13 07:39:31
+58,ficha.destroyeconomica,Eliminar Ficha Economica,web,Eliminar,2024-11-13 07:39:31,2024-11-13 07:39:31
+59,ficha.editindividual,Editar Ficha Individual,web,Editar,2024-11-13 07:39:31,2024-11-13 07:39:31
+60,ficha.destroyindividual,Eliminar Ficha Individual,web,Eliminar,2024-11-13 07:39:31,2024-11-13 07:39:31
+61,ficha.indexeconomica,Ver Lista de Ficha Economica,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+62,ficha.indexcotitular,Ver Lista de Ficha Cotitularidad,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+63,ficha.indexbiencultural,Ver Lista de Ficha Bienes Culturales,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+64,ficha.createeconomica,Crear Ficha Economica,web,Crear,2024-11-13 07:39:31,2024-11-13 07:39:31
+65,ficha.createbiencomun,Crear Ficha de Bienes Comunes,web,Crear,2024-11-13 07:39:31,2024-11-13 07:39:31
+66,ficha.createbiencultural,Crear Ficha Bien Cultural,web,Crear,2024-11-13 07:39:31,2024-11-13 07:39:31
+67,ficha.createrural,Crear Ficha Rural,web,Crear,2024-11-13 07:39:31,2024-11-13 07:39:31
+68,ficha.createindividual,Crear Ficha Individual,web,Crear,2024-11-13 07:39:31,2024-11-13 07:39:31
+69,impresiones,Ver impresiones,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+70,impresion.verficha,Ver Impresion de Ficha,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+71,impresion.verfichainformativa,Ver Impresion de Ficha Informativa,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+72,impresion.vercertificado,Ver Impresion de Certificado,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+73,impresion.veradministracion,Ver Impresion de Administracion,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+74,impresion.verinformativaeconomica,Ver Impresion de Informe Economico,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+75,impresion.vercnumeracion,Ver Impresion de Certificado de Numeracion,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+76,impresion.verccatastral,Ver Impresion de Certificado Catastral,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31
+77,ficha.editbiencomun,Editar Ficha Bien Comun,web,Editar,2024-11-13 07:39:31,2024-11-13 07:39:31
+78,ficha.destroybiencomun,Eliminar Ficha Bien Comun,web,Eliminar,2024-11-13 07:39:31,2024-11-13 07:39:31
+79,reporte.reportepersona,Reporte por Persona,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+80,reporte.reporteusuario,Reporte por Usuario,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+81,reporte.reportefechas,Reporte por Fechas,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+82,reporte.fichapuerta,Reporte por Puerta,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+83,reporte.fichapredio,Reporte por Predio,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+84,reporte.fichaconstrucciones,Reporte por Construcciones,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+85,reporte.fichaantiguedad,Reporte por Antiguedad,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+86,imagenes,Subir Imagenes,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+87,reporte.llenadoficha,Reporte Llenado de fichas,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+88,reporte.porlote,Reporte por Lote,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+89,reporte.actividadeconomica,Reporte por Actividad Economica,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+90,reporte.fichasmasivas,Reporte de Fichas Masivas,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+91,reporte.reportefirmas,Reporte por Firmas,web,Reportes,2024-11-13 07:39:31,2024-11-13 07:39:31
+92,visormapas,Visor de Mapas,web,Ver,2024-11-13 07:39:31,2024-11-13 07:39:31

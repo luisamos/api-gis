@@ -54,3 +54,14 @@
 2025-12-31 10:17:17,939 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:17] "POST /subir_shapefile HTTP/1.1" 200 -
 2025-12-31 10:17:34,551 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:34] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
 2025-12-31 10:17:34,579 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:34] "POST /validar_shapefile HTTP/1.1" 200 -
+2026-02-02 15:13:49,529 [ERROR] flask_migrate - Error: Directory migrations already exists and is not empty
+2026-02-02 15:31:06,379 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-02 15:31:06,380 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 15:31:06,387 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 15:31:07,380 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 15:31:07,387 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 15:53:46,492 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\models\\rol.py', reloading
+2026-02-02 15:53:46,674 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 15:53:49,520 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 15:53:49,524 [INFO] werkzeug -  * Debugger PIN: 627-558-473

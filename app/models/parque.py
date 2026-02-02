@@ -6,12 +6,12 @@ from sqlalchemy import Sequence
 from app.extensions import db
 
 class Parque(db.Model):
-  __tablename__ = "tg_parques"
+  __tablename__ = "tg_parque"
   __table_args__ = {"schema": "geo"}
 
   gid = db.Column(
       db.Integer,
-      Sequence("tg_parques_gid_seq", schema="geo"),
+      Sequence("tg_parque_gid_seq", schema="geo"),
       primary_key=True,
       autoincrement=True,
   )
@@ -27,7 +27,7 @@ class Parque(db.Model):
   geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
 
 class ParqueHistorico(db.Model):
-  __tablename__ = "tgh_parques"
+  __tablename__ = "tgh_parque"
   __table_args__ = {"schema": "geo"}
 
   id = db.Column(db.Integer, primary_key=True, autoincrement=True)

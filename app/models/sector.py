@@ -6,12 +6,12 @@ from sqlalchemy import Sequence
 from app.extensions import db
 
 class Sector(db.Model):
-  __tablename__ = "tg_sectores"
+  __tablename__ = "tg_sector"
   __table_args__ = {"schema": "geo"}
 
   gid = db.Column(
       db.Integer,
-      Sequence("tg_sectores_gid_seq", schema="geo"),
+      Sequence("tg_sector_gid_seq", schema="geo"),
       primary_key=True,
       autoincrement=True,
   )
@@ -25,7 +25,7 @@ class Sector(db.Model):
   geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
 
 class SectorHistorico(db.Model):
-  __tablename__ = "tgh_sectores"
+  __tablename__ = "tgh_sector"
   __table_args__ = {"schema": "geo"}
 
   id = db.Column(db.Integer, primary_key=True, autoincrement=True)

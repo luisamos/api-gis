@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Sequence
+from sqlalchemy import Sequence, UniqueConstraint
 
 from app.extensions import db
 
@@ -17,6 +17,8 @@ class Rol(db.Model):
       backref=db.backref('roles', lazy='dynamic'),
       lazy='dynamic'
   )
+  created_at = db.Column(db.DateTime)
+  updated_at = db.Column(db.DateTime)
 
 class RolPermiso(db.Model):
   __tablename__ = 'role_has_permissions'
@@ -33,3 +35,22 @@ class RolPermiso(db.Model):
       db.ForeignKey('catastro.roles.id', ondelete='CASCADE'),
       primary_key=True
   )
+
+class Permiso(db.Model):
+  __tablename__ = 'permissions'
+  __table_args__ = (
+      UniqueConstraint('name', 'guard_name', name='permissions_name_guard_name_unique'),
+      {'schema': 'catastro'}
+  )
+
+  id = db.Column(
+      db.BigInteger,
+      Sequence('permissions_id_seq', schema='catastro'),
+      primary_key=True
+  )
+  name = db.Column(db.String(255), nullable=False)
+  description = db.Column(db.String(255), nullable=False)
+  guard_name = db.Column(db.String(255), nullable=False)
+  categoria = db.Column(db.String(255))
+  created_at = db.Column(db.DateTime)
+  updated_at = db.Column(db.DateTime)
