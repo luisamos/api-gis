@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import bcrypt
 from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import create_access_token, get_csrf_token
 from sqlalchemy.exc import SQLAlchemyError
@@ -29,7 +30,6 @@ def acceso_visor():
       .join(Rol, Rol.id == RolPermiso.role_id)
       .filter(
         Usuario.usuario == usuario,
-        Usuario.password == contrasena,
         Rol.id == 4,
       )
       .order_by(Usuario.usuario, Rol.name)
@@ -40,6 +40,10 @@ def acceso_visor():
       return jsonify({"estado": False}), 200
 
     usuario_db, rol_db = resultado
+    if usuario_db.estado == "0":
+      return jsonify({"estado": False, "msj": "Usuario deshabilitado"}), 200
+    if not password_matches(usuario_db.password, contrasena):
+      return jsonify({"estado": False}), 200
     nombres_apellidos = " ".join(
       filtro
       for filtro in [
@@ -83,3 +87,16 @@ def acceso_visor():
   except Exception as exc:  # pragma: no cover - fallback
     current_app.logger.exception("🔴 Error interno del servidor: %s", exc)
     return jsonify({"error": "Error interno del servidor", "detalle": str(exc)}), 500
+
+def password_matches(stored_password: str, plain_password: str) -> bool:
+  if not stored_password:
+    return False
+  if stored_password.startswith(("$2a$", "$2b$", "$2y$")):
+    try:
+      return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        stored_password.encode("utf-8"),
+      )
+    except ValueError:
+      return False
+  return stored_password == plain_password

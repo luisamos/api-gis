@@ -152,3 +152,59 @@ sqlalchemy.exc.InvalidRequestError: One or more mappers failed to initialize - c
 2026-02-02 17:03:53,455 [INFO] werkzeug -  * Restarting with stat
 2026-02-02 17:03:54,597 [WARNING] werkzeug -  * Debugger is active!
 2026-02-02 17:03:54,600 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:07:44,546 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-02 17:07:44,547 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 17:07:44,548 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:07:45,581 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:07:45,583 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:07:46,145 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:07:46] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:07:46,256 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:07:46] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:12:38,179 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:12:38] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:12:38,192 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:12:38] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:16:52,734 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\dev\\usuario.py', reloading
+2026-02-02 17:16:52,890 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:29:57,755 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-02 17:29:57,756 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 17:29:57,757 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:29:58,761 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:29:58,766 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:29:58,782 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:29:58] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:29:58,850 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:29:58] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:33:15,121 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:33:15] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:33:15,132 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:33:15] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:36:11,772 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\acceso.py', reloading
+2026-02-02 17:36:11,958 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:36:13,195 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:36:13,198 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:37:00,247 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:37:00] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:37:00,349 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:37:00] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:37:01,516 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:37:01] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:37:01,529 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:37:01] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:41:55,059 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:41:55] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:41:55,071 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:41:55] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:44:51,419 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\acceso.py', reloading
+2026-02-02 17:44:51,662 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:44:53,871 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:44:53,879 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:45:07,095 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\acceso.py', reloading
+2026-02-02 17:45:07,272 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:45:08,398 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:45:08,401 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:45:32,788 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\acceso.py', reloading
+2026-02-02 17:45:32,960 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:45:34,021 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:45:34,024 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:46:21,560 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\acceso.py', reloading
+2026-02-02 17:46:21,761 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:47:12,378 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-02 17:47:12,379 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 17:47:12,380 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:47:13,477 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:47:13,481 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:47:13,995 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:47:13] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:47:14,249 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:47:14] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 17:47:42,185 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:47:42] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:47:42,196 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:47:42] "POST /token/acceso/ HTTP/1.1" 200 -

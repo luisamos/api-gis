@@ -12,7 +12,7 @@ class Rol(db.Model):
   guard_name = db.Column(db.String(255), nullable=False)
 
   permissions = db.relationship(
-      'Permission',
+      'Permiso',
       secondary='catastro.role_has_permissions',
       backref=db.backref('roles', lazy='dynamic'),
       lazy='dynamic'
