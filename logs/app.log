@@ -1,67 +1,154 @@
-2025-12-30 10:53:34,112 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+2026-02-02 16:55:53,266 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on http://127.0.0.2:5000
-2025-12-30 10:53:34,113 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
-2025-12-30 10:53:34,115 [INFO] werkzeug -  * Restarting with stat
-2025-12-30 10:53:35,110 [WARNING] werkzeug -  * Debugger is active!
-2025-12-30 10:53:35,113 [INFO] werkzeug -  * Debugger PIN: 627-558-473
-2025-12-30 11:08:11,114 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:11] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-30 11:08:14,831 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:14] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:08:15,095 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:15] "POST /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:08:21,551 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:21] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:08:22,049 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:22] "POST /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:09:18,438 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:18] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-30 11:09:26,909 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:26] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:09:26,936 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:26] "[31m[1mPOST /validar_shapefile HTTP/1.1[0m" 400 -
-2025-12-30 11:09:43,353 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:43] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-30 11:09:48,911 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:48] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:09:48,941 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:48] "POST /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:10:01,670 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:10:01] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:10:01,737 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:10:01] "POST /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:14:11,511 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:11] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-30 11:14:11,526 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:11] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:14:11,577 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:11] "POST /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:14:14,094 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:14] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:14:14,155 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:14] "POST /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:15:51,144 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:51] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-30 11:15:51,163 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:51] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:15:51,213 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:51] "POST /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:15:53,534 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:53] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:15:53,649 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:53] "POST /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:16:24,367 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:24] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-30 11:16:24,385 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:24] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:16:24,748 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:24] "POST /validar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:16:35,454 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:35] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
-2025-12-30 11:16:36,392 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:36] "POST /cargar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:10:13,894 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+2026-02-02 16:55:53,276 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 16:55:53,283 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 16:55:54,361 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 16:55:54,364 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 16:58:36,075 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 16:58:36] "[33mPOST /token/validar HTTP/1.1[0m" 404 -
+2026-02-02 16:58:57,738 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 16:58:57] "[33mPOST /token/validar HTTP/1.1[0m" 404 -
+2026-02-02 16:59:17,609 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on http://127.0.0.2:5000
-2025-12-31 10:10:13,896 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
-2025-12-31 10:10:13,904 [INFO] werkzeug -  * Restarting with stat
-2025-12-31 10:10:14,885 [WARNING] werkzeug -  * Debugger is active!
-2025-12-31 10:10:14,890 [INFO] werkzeug -  * Debugger PIN: 627-558-473
-2025-12-31 10:10:41,224 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:41] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-31 10:10:44,387 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:44] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:10:46,789 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:46] "POST /validar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:10:49,936 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:49] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:10:57,806 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:57] "POST /cargar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:11:38,600 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:38] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-31 10:11:40,506 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:40] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:11:41,939 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:41] "POST /validar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:11:42,949 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:42] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:11:57,668 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:57] "POST /cargar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:13:37,264 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:13:37] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-31 10:13:44,033 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:13:44] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:13:44,057 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:13:44] "[31m[1mPOST /validar_shapefile HTTP/1.1[0m" 400 -
-2025-12-31 10:17:17,939 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:17] "POST /subir_shapefile HTTP/1.1" 200 -
-2025-12-31 10:17:34,551 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:34] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
-2025-12-31 10:17:34,579 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:34] "POST /validar_shapefile HTTP/1.1" 200 -
-2026-02-02 15:13:49,529 [ERROR] flask_migrate - Error: Directory migrations already exists and is not empty
-2026-02-02 15:31:06,379 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+2026-02-02 16:59:17,609 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 16:59:17,610 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 16:59:18,636 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 16:59:18,639 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 16:59:24,110 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 16:59:24] "[33mPOST /token/validar HTTP/1.1[0m" 404 -
+2026-02-02 16:59:39,951 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\__init__.py', reloading
+2026-02-02 16:59:40,096 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:00:04,472 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on http://127.0.0.2:5000
-2026-02-02 15:31:06,380 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
-2026-02-02 15:31:06,387 [INFO] werkzeug -  * Restarting with stat
-2026-02-02 15:31:07,380 [WARNING] werkzeug -  * Debugger is active!
-2026-02-02 15:31:07,387 [INFO] werkzeug -  * Debugger PIN: 627-558-473
-2026-02-02 15:53:46,492 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\models\\rol.py', reloading
-2026-02-02 15:53:46,674 [INFO] werkzeug -  * Restarting with stat
-2026-02-02 15:53:49,520 [WARNING] werkzeug -  * Debugger is active!
-2026-02-02 15:53:49,524 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:00:04,473 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 17:00:04,474 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:00:05,756 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:00:05,759 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:00:13,852 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:00:13] "[33mPOST /token/validar HTTP/1.1[0m" 404 -
+2026-02-02 17:00:20,985 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:00:20] "[33mPOST /acceso/validar HTTP/1.1[0m" 404 -
+2026-02-02 17:01:22,113 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:01:22] "[33mPOST /token/validar HTTP/1.1[0m" 404 -
+2026-02-02 17:01:35,896 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\acceso.py', reloading
+2026-02-02 17:01:36,047 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:01:37,095 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:01:37,097 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-02 17:01:47,653 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:01:47] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:01:47,684 [ERROR] app - 🔴 Error de base de datos: When initializing mapper Mapper[Rol(roles)], expression 'Permission' failed to locate a name ('Permission'). If this is a class name, consider adding this relationship() to the <class 'app.models.rol.Rol'> class after both dependent classes have been defined.
+Traceback (most recent call last):
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\clsregistry.py", line 516, in _resolve_name
+    rval = d[token]
+           ~^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\util\_collections.py", line 345, in __missing__
+    self[key] = val = self.creator(key)
+                      ~~~~~~~~~~~~^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\clsregistry.py", line 484, in _access_cls
+    return self.fallback[key]
+           ~~~~~~~~~~~~~^^^^^
+KeyError: 'Permission'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\apps\python\flask\api-gis\app\routes\acceso.py", line 28, in acceso_visor
+    db.session.query(Usuario, Rol)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\scoping.py", line 1680, in query
+    return self._proxied.query(*entities, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2955, in query
+    return self._query_cls(entities, self, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 276, in __init__
+    self._set_entities(entities)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 289, in _set_entities
+    coercions.expect(
+    ~~~~~~~~~~~~~~~~^
+        roles.ColumnsClauseRole,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        post_inspect=True,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\sql\coercions.py", line 388, in expect
+    insp._post_inspect
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 1338, in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+                                           ~~~~~~~~~^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 2724, in _post_inspect
+    self._check_configure()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 2401, in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 4214, in _configure_registries
+    _do_configure_registries(registries, cascade)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 4255, in _do_configure_registries
+    mapper._post_configure_properties()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 2418, in _post_configure_properties
+    prop.init()
+    ~~~~~~~~~^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\interfaces.py", line 589, in init
+    self.do_init()
+    ~~~~~~~~~~~~^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\relationships.py", line 1656, in do_init
+    self._setup_entity()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\relationships.py", line 1866, in _setup_entity
+    self._clsregistry_resolve_name(argument)(),
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\clsregistry.py", line 520, in _resolve_name
+    self._raise_for_name(name, err)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\clsregistry.py", line 501, in _raise_for_name
+    raise exc.InvalidRequestError(
+    ...<5 lines>...
+    ) from err
+sqlalchemy.exc.InvalidRequestError: When initializing mapper Mapper[Rol(roles)], expression 'Permission' failed to locate a name ('Permission'). If this is a class name, consider adding this relationship() to the <class 'app.models.rol.Rol'> class after both dependent classes have been defined.
+2026-02-02 17:01:47,810 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:01:47] "[35m[1mPOST /token/acceso/ HTTP/1.1[0m" 500 -
+2026-02-02 17:02:30,028 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:02:30] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 17:02:30,034 [ERROR] app - 🔴 Error de base de datos: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Rol(roles)]'. Original exception was: When initializing mapper Mapper[Rol(roles)], expression 'Permission' failed to locate a name ('Permission'). If this is a class name, consider adding this relationship() to the <class 'app.models.rol.Rol'> class after both dependent classes have been defined.
+Traceback (most recent call last):
+  File "C:\apps\python\flask\api-gis\app\routes\acceso.py", line 28, in acceso_visor
+    db.session.query(Usuario, Rol)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\scoping.py", line 1680, in query
+    return self._proxied.query(*entities, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\session.py", line 2955, in query
+    return self._query_cls(entities, self, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 276, in __init__
+    self._set_entities(entities)
+    ~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\query.py", line 289, in _set_entities
+    coercions.expect(
+    ~~~~~~~~~~~~~~~~^
+        roles.ColumnsClauseRole,
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        post_inspect=True,
+        ^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\sql\coercions.py", line 388, in expect
+    insp._post_inspect
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 1338, in __get__
+    obj.__dict__[self.__name__] = result = self.fget(obj)
+                                           ~~~~~~~~~^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 2724, in _post_inspect
+    self._check_configure()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 2401, in _check_configure
+    _configure_registries({self.registry}, cascade=True)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 4214, in _configure_registries
+    _do_configure_registries(registries, cascade)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\apps\python\flask\api-gis\venv\Lib\site-packages\sqlalchemy\orm\mapper.py", line 4251, in _do_configure_registries
+    raise e
+sqlalchemy.exc.InvalidRequestError: One or more mappers failed to initialize - can't proceed with initialization of other mappers. Triggering mapper: 'Mapper[Rol(roles)]'. Original exception was: When initializing mapper Mapper[Rol(roles)], expression 'Permission' failed to locate a name ('Permission'). If this is a class name, consider adding this relationship() to the <class 'app.models.rol.Rol'> class after both dependent classes have been defined.
+2026-02-02 17:02:30,050 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:02:30] "[35m[1mPOST /token/acceso/ HTTP/1.1[0m" 500 -
+2026-02-02 17:03:53,286 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\acceso.py', reloading
+2026-02-02 17:03:53,455 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 17:03:54,597 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 17:03:54,600 [INFO] werkzeug -  * Debugger PIN: 627-558-473

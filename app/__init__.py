@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import timedelta
 from pathlib import Path
 from typing import Dict
 
@@ -9,7 +10,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from .config import DB_URL, ID_UBIGEO, IS_DEV
-from .extensions import db, migrate
+from .extensions import db, jwt, migrate
 from .routes import register_routes
 
 def prepare_directories(base_dir: Path) -> Dict[str, str]:
@@ -71,6 +72,15 @@ def create_app() -> Flask:
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     JSON_SORT_KEYS=False,
     ID_UBIGEO=ID_UBIGEO,
+    JWT_COOKIE_SECURE=not IS_DEV,
+    JWT_TOKEN_LOCATION=["cookies"],
+    JWT_ACCESS_COOKIE_NAME="access_geotoken",
+    JWT_ACCESS_TOKEN_EXPIRES=timedelta(minutes=30),
+    JWT_REFRESH_TOKEN_EXPIRES=timedelta(days=1),
+    JWT_COOKIE_CSRF_PROTECT=True,
+    JWT_COOKIE_SAMESITE="Lax",
+    JWT_SECRET_KEY="VSzpW2$!7FHosVi47uvJbY",
+    JWT_COOKIE_HTTPONLY=True,
     **directories,
   )
 
@@ -80,6 +90,7 @@ def create_app() -> Flask:
 
   db.init_app(app)
   migrate.init_app(app, db)
+  jwt.init_app(app)
 
   register_routes(app)
   CORS(app)

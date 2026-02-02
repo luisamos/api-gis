@@ -1,0 +1,85 @@
+from __future__ import annotations
+
+from flask import Blueprint, current_app, jsonify, request
+from flask_jwt_extended import create_access_token, get_csrf_token
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.extensions import db
+from app.models.rol import Rol, RolPermiso
+from app.models.usuario import Usuario
+
+acceso_bp = Blueprint("acceso", __name__, url_prefix="/token")
+
+@acceso_bp.route("/acceso/", methods=["POST"])
+def acceso_visor():
+  try:
+    usuario = request.json.get("usuario") if request.is_json else None
+    contrasena = request.json.get("contrasena") if request.is_json else None
+
+    if current_app.config.get("ENV") == "Development":
+      current_app.logger.debug("🟢\tUsuario: %s", usuario)
+      current_app.logger.debug("🟢\tContraseña: %s", contrasena)
+
+    if not usuario or not contrasena:
+      return jsonify({"estado": False, "msj": "Faltan datos"}), 400
+
+    resultado = (
+      db.session.query(Usuario, Rol)
+      .join(RolPermiso, RolPermiso.permission_id == Usuario.id_usuario)
+      .join(Rol, Rol.id == RolPermiso.role_id)
+      .filter(
+        Usuario.usuario == usuario,
+        Usuario.password == contrasena,
+        Rol.id == 4,
+      )
+      .order_by(Usuario.usuario, Rol.name)
+      .first()
+    )
+
+    if not resultado:
+      return jsonify({"estado": False}), 200
+
+    usuario_db, rol_db = resultado
+    nombres_apellidos = " ".join(
+      filtro
+      for filtro in [
+        usuario_db.nombres,
+        usuario_db.ape_paterno,
+        usuario_db.ape_materno,
+      ]
+      if filtro
+    ).strip()
+
+    claims = {
+      "id_usuario": str(usuario_db.id_usuario),
+      "id_rol": str(rol_db.id),
+      "nombres_apellidos": nombres_apellidos,
+    }
+
+    access_token = create_access_token(
+      identity=str(usuario_db.id_usuario),
+      additional_claims=claims,
+    )
+    csrf_token = get_csrf_token(access_token)
+    resp = jsonify({"estado": True})
+    resp.set_cookie(
+      "access_geotoken",
+      access_token,
+      httponly=True,
+      secure=current_app.config.get("JWT_COOKIE_SECURE", True),
+      samesite=current_app.config.get("JWT_COOKIE_SAMESITE", "Lax"),
+    )
+    resp.set_cookie(
+      "csrf_access_token",
+      csrf_token,
+      httponly=False,
+      secure=current_app.config.get("JWT_COOKIE_SECURE", True),
+      samesite=current_app.config.get("JWT_COOKIE_SAMESITE", "Lax"),
+    )
+    return resp, 200
+  except SQLAlchemyError as exc:
+    current_app.logger.exception("🔴 Error de base de datos: %s", exc)
+    return jsonify({"error": "Error de base de datos", "detalle": str(exc)}), 500
+  except Exception as exc:  # pragma: no cover - fallback
+    current_app.logger.exception("🔴 Error interno del servidor: %s", exc)
+    return jsonify({"error": "Error interno del servidor", "detalle": str(exc)}), 500

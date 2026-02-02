@@ -135,7 +135,7 @@ def eje_via_builder(feature, fields, id_usuario, fecha):
   cod_sector = get_value(feature, fields.get("cod_sector"))
   cod_via = get_value(feature, fields.get("cod_via"))
   nombre_via = get_value(feature, fields.get("nomb_via"))
-  
+
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return EjeVia(
     id_ubigeo=ID_UBIGEO,
@@ -144,7 +144,6 @@ def eje_via_builder(feature, fields, id_usuario, fecha):
     cod_via=cod_via,
     id_via=f"{ID_UBIGEO}{cod_via}",
     nomb_via=nombre_via,
-    
     peri_grafi=perimetro,
     usuario_crea=id_usuario,
     fecha_crea=fecha,
@@ -308,7 +307,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     specs=(
       FieldSpec("cod_sector", length=2, numeric=True, required=True),
       FieldSpec("cod_via", length=6, numeric=True),
-      FieldSpec("nomb_via", required=True),      
+      FieldSpec("nomb_via", required=True),
     ),
     report_key="cod_sector",
     model=EjeVia,

@@ -11,6 +11,7 @@ JOIN catastro.role_has_permissions ur
     ON ur.permission_id = u.id_usuario
 JOIN catastro.roles r
     ON r.id = ur.role_id
+WHERE r.id <> 4
 ORDER BY u.usuario, r.name;
 
 -- Exportar
