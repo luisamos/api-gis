@@ -24,8 +24,8 @@ from app.models import (
   ComercioHistorico,
   Construccion,
   ConstruccionHistorico,
-  Parques,
-  ParquesHistorico,
+  Parque,
+  ParqueHistorico,
   Puerta,
   PuertaHistorico,
 )
@@ -222,14 +222,14 @@ def construccion_report_transform(values: Dict[str, str]) -> str:
   return id_lote[6:8]
 
 
-def parques_builder(feature, fields, id_usuario, fecha):
+def parque_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
   area, perimetro = get_area_perimetro(geometry)
   cod_parque = get_value(feature, fields.get("cod_parque"))
   id_lote = get_value(feature, fields.get("id_lote"))
   nomb_parque = get_value(feature, fields.get("nomb_parque")) or None
   wkt_geom = geometry.ExportToWkt() if geometry else None
-  return Parques(
+  return Parque(
     id_ubigeo=ID_UBIGEO,
     cod_parque=cod_parque,
     id_parque=f"{ID_UBIGEO}{cod_parque}",
@@ -361,8 +361,8 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
     delete_key="cod_piso",
     builder=construccion_builder,
   ),
-  "Parques": TableDefinition(
-    name="Parques",
+  "Parque": TableDefinition(
+    name="Parque",
     geom_keyword="POLYGON",
     srid=32719,
     specs=(
@@ -371,10 +371,10 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
       FieldSpec("nomb_parque", required=False),
     ),
     report_key="id_lote",
-    model=Parques,
-    historico_model=ParquesHistorico,
+    model=Parque,
+    historico_model=ParqueHistorico,
     delete_key="cod_parque",
-    builder=parques_builder,
+    builder=parque_builder,
   ),
   "Puerta": TableDefinition(
     name="Puerta",
@@ -436,8 +436,8 @@ def move_to_history(existing: list, historico_model, id_usuario, fecha):
       historico = historico_model.from_comercio(record, id_usuario, fecha)
     elif hasattr(historico_model, "from_construccion"):
       historico = historico_model.from_construccion(record, id_usuario, fecha)
-    elif hasattr(historico_model, "from_parques"):
-      historico = historico_model.from_parques(record, id_usuario, fecha)
+    elif hasattr(historico_model, "from_parque"):
+      historico = historico_model.from_parque(record, id_usuario, fecha)
     elif hasattr(historico_model, "from_habilitacion_urbana"):
       historico = historico_model.from_habilitacion_urbana(record, id_usuario, fecha)
     elif hasattr(historico_model, "from_puerta"):

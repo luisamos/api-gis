@@ -4,7 +4,7 @@ from .lote import Lote, LoteHistorico
 from .eje_via import EjeVia, EjeViaHistorico
 from .habilitacion_urbana import HabilitacionUrbana, HabilitacionUrbanaHistorico
 from .construccion import Construccion, ConstruccionHistorico
-from .parques import Parques, ParquesHistorico
+from .parque import Parque, Parque Historico
 from .comercio import Comercio, ComercioHistorico
 from .puerta import Puerta, PuertaHistorico
 
@@ -21,8 +21,8 @@ __all__ = [
   "HabilitacionUrbanaHistorico",
   "Construccion",
   "ConstruccionHistorico",
-  "Parques",
-  "ParquesHistorico",
+  "Parque",
+  "ParqueHistorico",
   "Comercio",
   "ComercioHistorico",
   "Puerta",

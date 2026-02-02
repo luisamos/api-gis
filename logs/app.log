@@ -1,0 +1,56 @@
+2025-12-30 10:53:34,112 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2025-12-30 10:53:34,113 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2025-12-30 10:53:34,115 [INFO] werkzeug -  * Restarting with stat
+2025-12-30 10:53:35,110 [WARNING] werkzeug -  * Debugger is active!
+2025-12-30 10:53:35,113 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2025-12-30 11:08:11,114 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:11] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-30 11:08:14,831 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:14] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:08:15,095 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:15] "POST /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:08:21,551 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:21] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:08:22,049 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:08:22] "POST /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:09:18,438 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:18] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-30 11:09:26,909 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:26] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:09:26,936 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:26] "[31m[1mPOST /validar_shapefile HTTP/1.1[0m" 400 -
+2025-12-30 11:09:43,353 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:43] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-30 11:09:48,911 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:48] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:09:48,941 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:09:48] "POST /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:10:01,670 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:10:01] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:10:01,737 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:10:01] "POST /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:14:11,511 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:11] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-30 11:14:11,526 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:11] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:14:11,577 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:11] "POST /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:14:14,094 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:14] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:14:14,155 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:14:14] "POST /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:15:51,144 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:51] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-30 11:15:51,163 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:51] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:15:51,213 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:51] "POST /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:15:53,534 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:53] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:15:53,649 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:15:53] "POST /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:16:24,367 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:24] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-30 11:16:24,385 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:24] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:16:24,748 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:24] "POST /validar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:16:35,454 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:35] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
+2025-12-30 11:16:36,392 [INFO] werkzeug - 127.0.0.1 - - [30/Dec/2025 11:16:36] "POST /cargar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:10:13,894 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2025-12-31 10:10:13,896 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2025-12-31 10:10:13,904 [INFO] werkzeug -  * Restarting with stat
+2025-12-31 10:10:14,885 [WARNING] werkzeug -  * Debugger is active!
+2025-12-31 10:10:14,890 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2025-12-31 10:10:41,224 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:41] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-31 10:10:44,387 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:44] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:10:46,789 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:46] "POST /validar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:10:49,936 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:49] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:10:57,806 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:10:57] "POST /cargar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:11:38,600 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:38] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-31 10:11:40,506 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:40] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:11:41,939 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:41] "POST /validar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:11:42,949 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:42] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:11:57,668 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:11:57] "POST /cargar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:13:37,264 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:13:37] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-31 10:13:44,033 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:13:44] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:13:44,057 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:13:44] "[31m[1mPOST /validar_shapefile HTTP/1.1[0m" 400 -
+2025-12-31 10:17:17,939 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:17] "POST /subir_shapefile HTTP/1.1" 200 -
+2025-12-31 10:17:34,551 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:34] "OPTIONS /validar_shapefile HTTP/1.1" 200 -
+2025-12-31 10:17:34,579 [INFO] werkzeug - 127.0.0.1 - - [31/Dec/2025 10:17:34] "POST /validar_shapefile HTTP/1.1" 200 -
