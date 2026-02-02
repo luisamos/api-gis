@@ -3,7 +3,7 @@ from sqlalchemy import Sequence
 
 from app.extensions import db
 
-class Role(db.Model):
+class Rol(db.Model):
   __tablename__ = 'roles'
   __table_args__ = {'schema': 'catastro'}
 
@@ -18,7 +18,7 @@ class Role(db.Model):
       lazy='dynamic'
   )
 
-class RoleHasPermission(db.Model):
+class RolPermiso(db.Model):
   __tablename__ = 'role_has_permissions'
   __table_args__ = {'schema': 'catastro'}
 
