@@ -58,6 +58,7 @@ def acceso_visor():
       "id_usuario": str(usuario_db.id_usuario),
       "id_rol": str(rol_db.id),
       "nombres_apellidos": nombres_apellidos,
+      "correo_electronico": usuario_db.email,
     }
 
     access_token = create_access_token(
