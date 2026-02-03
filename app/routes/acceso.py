@@ -102,6 +102,17 @@ def verificar_expiracion():
     except Exception as e:
         return jsonify({"estado": False, "error": str(e)}), 500
 
+@acceso_bp.route("/salir", methods=["POST"], strict_slashes=False)
+def salir():
+  resp = jsonify({"estado": True, "mensaje": "Sesión cerrada"})
+  if IS_DEV:
+    resp.delete_cookie("access_geotoken", secure=False, samesite="None", partitioned=True)
+    resp.delete_cookie("csrf_access_token", secure=False, samesite="None", partitioned=True)
+  else:
+    resp.delete_cookie("access_geotoken", secure=True, samesite="Lax")
+    resp.delete_cookie("csrf_access_token", secure=True, samesite="Lax")
+  return resp, 200
+
 def password_matches(stored_password: str, plain_password: str) -> bool:
   if not stored_password:
     return False

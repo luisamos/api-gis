@@ -6,8 +6,11 @@ from pathlib import Path
 from typing import Callable, Dict, Iterable, Optional, Type
 
 from flask import Blueprint, current_app, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request, get_jwt
+from osgeo import ogr
 from sqlalchemy import select
 
+from app.config import IS_DEV
 from app.extensions import db
 from app.models import (
   Sector,
@@ -449,245 +452,278 @@ geodata_bp = Blueprint("geodata", __name__, url_prefix="/")
 
 @geodata_bp.route("/")
 def inicio():
-  return "🟢 API - GIS - MDW 2025 - 18/12/2025"
+  return "🟢 API - GIS - MDW 2025 - 03/02/2026"
+
+def validar_token():
+  try:
+    verify_jwt_in_request()
+    if IS_DEV:
+      token_data = get_jwt()
+      print("🟢 Token decodificado:", token_data)
+
+    id_usuario = get_jwt_identity()
+    return id_usuario, True
+
+  except Exception as e:
+    print("🔴 Error al verificar el token:", e)
+    return None, False
 
 @geodata_bp.route("/subir_shapefile", methods=["POST"])
+@jwt_required()
 def subir_shapefile():
-  payload, status = handle_shapefile_upload(request.files.get("file"))
-  return jsonify(payload), status
+  id_usuario, estado = validar_token()
+  if not estado:
+    return jsonify(estado), 401
+  else:
+    if id_usuario:
+      payload, status = handle_shapefile_upload(request.files.get("file"))
+      return jsonify(payload), status
+    else:
+      return jsonify({"estado": False, "mensaje": "ID de usuario inválido"}), 400
 
 @geodata_bp.route("/validar_shapefile", methods=["POST"])
 @handle_gdal_missing
+@jwt_required()
 def validar_shapefile():
-  payload = request.get_json(silent=True) or {}
-  carpeta = payload.get("nombreCarpeta")
-  table_def = resolve_table(payload)
+  id_usuario, estado = validar_token()
+  if not estado:
+    return jsonify(estado), 401
+  else:
+    if id_usuario:
+      payload = request.get_json(silent=True) or {}
+      carpeta = payload.get("nombreCarpeta")
+      table_def = resolve_table(payload)
 
-  if not carpeta or table_def is None:
-    return (
-      jsonify(
-        {
-          "estado": False,
-          "mensaje": "Parámetros 'nombreCarpeta' y 'tabla' son obligatorios",
-        }
-      ),
-      400,
-    )
+      if not carpeta or table_def is None:
+        return (
+          jsonify(
+            {
+              "estado": False,
+              "mensaje": "Parámetros 'nombreCarpeta' y 'tabla' son obligatorios",
+            }
+          ),
+          400,
+        )
 
-  carpeta_path = Path(current_app.config["UPLOADS_DIR"]) / carpeta
-  if not carpeta_path.exists():
-    return jsonify({"estado": False, "mensaje": f"No existe la carpeta indicada: {carpeta}"}), 404
+      carpeta_path = Path(current_app.config["UPLOADS_DIR"]) / carpeta
+      if not carpeta_path.exists():
+        return jsonify({"estado": False, "mensaje": f"No existe la carpeta indicada: {carpeta}"}), 404
 
-  shapefile_path = find_shapefile(carpeta_path)
-  if shapefile_path is None:
-    return jsonify({"estado": False, "mensaje": f"No se encontró archivo .shp en la carpeta: {carpeta}"}), 404
+      shapefile_path = find_shapefile(carpeta_path)
+      if shapefile_path is None:
+        return jsonify({"estado": False, "mensaje": f"No se encontró archivo .shp en la carpeta: {carpeta}"}), 404
 
-  datasource, layer = open_shapefile_layer(shapefile_path)
-  if datasource is None or layer is None:
-    return jsonify({"estado": False, "mensaje": f"No se pudo abrir el archivo Shapefile: {shapefile_path}"}), 500
+      datasource, layer = open_shapefile_layer(shapefile_path)
+      if datasource is None or layer is None:
+        return jsonify({"estado": False, "mensaje": f"No se pudo abrir el archivo Shapefile: {shapefile_path}"}), 500
 
-  field_map, missing_required = resolve_fields(layer, payload, table_def.specs)
-  if missing_required:
-    datasource = None
-    layer = None
-    return (
-      jsonify(
-        {
-          "estado": False,
-          "mensaje": "El archivo Shapefile no contiene los campos requeridos",
-          "faltantes": missing_required,
-        }
-      ),
-      400,
-    )
+      field_map, missing_required = resolve_fields(layer, payload, table_def.specs)
+      if missing_required:
+        datasource = None
+        layer = None
+        return (
+          jsonify(
+            {
+              "estado": False,
+              "mensaje": "El archivo Shapefile no contiene los campos requeridos",
+              "faltantes": missing_required,
+            }
+          ),
+          400,
+        )
 
-  if not geometry_matches(layer, table_def.geom_keyword):
-    datasource = None
-    layer = None
-    return (
-      jsonify(
-        {
-          "estado": False,
-          "mensaje": f"La capa debe contener geometrías de tipo {table_def.geom_keyword}",
-        }
-      ),
-      400,
-    )
+      if not geometry_matches(layer, table_def.geom_keyword):
+        datasource = None
+        layer = None
+        return (
+          jsonify(
+            {
+              "estado": False,
+              "mensaje": f"La capa debe contener geometrías de tipo {table_def.geom_keyword}",
+            }
+          ),
+          400,
+        )
 
-  srid = get_layer_srid(layer, expected_epsg=table_def.srid)
-  if srid != str(table_def.srid):
-    datasource = None
-    layer = None
-    return (
-      jsonify(
-        {
-          "estado": False,
-          "mensaje": f"La proyección del Shapefile debe ser EPSG:{table_def.srid}",
-        }
-      ),
-      400,
-    )
+      srid = get_layer_srid(layer, expected_epsg=table_def.srid)
+      if srid != str(table_def.srid):
+        datasource = None
+        layer = None
+        return (
+          jsonify(
+            {
+              "estado": False,
+              "mensaje": f"La proyección del Shapefile debe ser EPSG:{table_def.srid}",
+            }
+          ),
+          400,
+        )
 
-  specs_to_validate = [spec for spec in table_def.specs if spec.key in field_map]
-  errores, registros_vacios, contador = validate_fields(
-    layer, field_map, specs_to_validate, table_def.report_key, table_def.report_transform
-  )
+      specs_to_validate = [spec for spec in table_def.specs if spec.key in field_map]
+      errores, registros_vacios, contador = validate_fields(
+        layer, field_map, specs_to_validate, table_def.report_key, table_def.report_transform
+      )
 
-  errores_detallados = describe_validation_errors(errores, specs_to_validate)
+      errores_detallados = describe_validation_errors(errores, specs_to_validate)
 
-  reporte = [
-    {table_def.report_key: clave, "totalRegistros": total}
-    for clave, total in sorted(contador.items())
-  ]
+      reporte = [
+        {table_def.report_key: clave, "totalRegistros": total}
+        for clave, total in sorted(contador.items())
+      ]
 
-  datasource = None
-  layer = None
+      datasource = None
+      layer = None
 
-  if errores:
-    return (
-      jsonify(
-        {
-          "estado": False,
-          "mensaje": "Se encontraron errores en los códigos del shapefile",
-          "errores": errores_detallados,
-          "reporte": reporte,
-        }
-      ),
-      400,
-    )
+      if errores:
+        return (
+          jsonify(
+            {
+              "estado": False,
+              "mensaje": "Se encontraron errores en los códigos del shapefile",
+              "errores": errores_detallados,
+              "reporte": reporte,
+            }
+          ),
+          400,
+        )
 
-  metadata = {
-    "validado": True,
-    "fields": field_map,
-    "tabla": table_def.name,
-    "fechaValidacion": datetime.utcnow().isoformat(),
-  }
-  metadata_path = carpeta_path / "validation.json"
-  store_metadata(metadata_path, metadata)
-
-  return (
-    jsonify(
-      {
-        "estado": True,
-        "mensaje": "Shapefile validado correctamente",
-        "reporte": reporte,
+      metadata = {
+        "validado": True,
+        "fields": field_map,
+        "tabla": table_def.name,
+        "fechaValidacion": datetime.utcnow().isoformat(),
       }
-    ),
-    200,
-  )
+      metadata_path = carpeta_path / "validation.json"
+      store_metadata(metadata_path, metadata)
+
+      return (
+        jsonify(
+          {
+            "estado": True,
+            "mensaje": "Shapefile validado correctamente",
+            "reporte": reporte,
+          }
+        ),
+        200,
+      )
 
 @geodata_bp.route("/cargar_shapefile", methods=["POST"])
 @handle_gdal_missing
+@jwt_required()
 def cargar_shapefile():
-  payload = request.get_json(silent=True) or {}
-  carpeta = payload.get("nombreCarpeta")
-  id_usuario = payload.get("id_usuario")
-  table_def = resolve_table(payload)
+  id_usuario, estado = validar_token()
+  if not estado:
+    return jsonify(estado), 401
+  else:
+    if id_usuario:
+      payload = request.get_json(silent=True) or {}
+      carpeta = payload.get("nombreCarpeta")
+      table_def = resolve_table(payload)
 
-  if not carpeta or id_usuario is None or table_def is None:
-    return (
-      jsonify(
-        {
-          "estado": False,
-          "mensaje": "Parámetros 'nombreCarpeta', 'tabla' e 'id_usuario' son obligatorios",
-        }
-      ),
-      400,
-    )
+      if not carpeta or id_usuario is None or table_def is None:
+        return (
+          jsonify(
+            {
+              "estado": False,
+              "mensaje": "Parámetros 'nombreCarpeta', 'tabla' e 'id_usuario' son obligatorios",
+            }
+          ),
+          400,
+        )
 
-  try:
-    id_usuario = int(id_usuario)
-  except (TypeError, ValueError):
-    return (
-      jsonify({"estado": False, "mensaje": "El parámetro 'id_usuario' debe ser numérico"}),
-      400,
-    )
+      try:
+        id_usuario = int(id_usuario)
+      except (TypeError, ValueError):
+        return (
+          jsonify({"estado": False, "mensaje": "El parámetro 'id_usuario' debe ser numérico"}),
+          400,
+        )
 
-  carpeta_path = Path(current_app.config["UPLOADS_DIR"]) / carpeta
-  if not carpeta_path.exists():
-    return (
-      jsonify({"estado": False, "mensaje": f"No existe la carpeta indicada: {carpeta}"}),
-      404,
-    )
+      carpeta_path = Path(current_app.config["UPLOADS_DIR"]) / carpeta
+      if not carpeta_path.exists():
+        return (
+          jsonify({"estado": False, "mensaje": f"No existe la carpeta indicada: {carpeta}"}),
+          404,
+        )
 
-  metadata = load_metadata(carpeta_path / "validation.json")
-  if metadata is None:
-    return (
-      jsonify({"estado": False, "mensaje": "Debe validar el Shapefile antes de cargarlo"}),
-      400,
-    )
+      metadata = load_metadata(carpeta_path / "validation.json")
+      if metadata is None:
+        return (
+          jsonify({"estado": False, "mensaje": "Debe validar el Shapefile antes de cargarlo"}),
+          400,
+        )
 
-  shapefile_path = find_shapefile(carpeta_path)
-  if shapefile_path is None:
-    return (
-      jsonify({"estado": False, "mensaje": f"No se encontró archivo .shp en la carpeta: {carpeta}"}),
-      404,
-    )
+      shapefile_path = find_shapefile(carpeta_path)
+      if shapefile_path is None:
+        return (
+          jsonify({"estado": False, "mensaje": f"No se encontró archivo .shp en la carpeta: {carpeta}"}),
+          404,
+        )
 
-  datasource, layer = open_shapefile_layer(shapefile_path)
-  if datasource is None or layer is None:
-    return (
-      jsonify({"estado": False, "mensaje": f"No se pudo abrir el archivo Shapefile: {shapefile_path}"}),
-      500,
-    )
+      datasource, layer = open_shapefile_layer(shapefile_path)
+      if datasource is None or layer is None:
+        return (
+          jsonify({"estado": False, "mensaje": f"No se pudo abrir el archivo Shapefile: {shapefile_path}"}),
+          500,
+        )
 
-  fields = extract_fields(metadata, table_def.specs)
-  if not fields:
-    datasource = None
-    layer = None
-    return (
-      jsonify({"estado": False, "mensaje": "La información de validación es incompleta"}),
-      400,
-    )
+      fields = extract_fields(metadata, table_def.specs)
+      if not fields:
+        datasource = None
+        layer = None
+        return (
+          jsonify({"estado": False, "mensaje": "La información de validación es incompleta"}),
+          400,
+        )
 
-  delete_values: set[str] = set()
-  layer.ResetReading()
-  feature = layer.GetNextFeature()
-  while feature is not None:
-    value = get_value(feature, fields.get(table_def.delete_key))
-    if value:
-      delete_values.add(value)
-    feature = layer.GetNextFeature()
-
-  fecha = datetime.utcnow()
-  historico_registros = 0
-  insertados = 0
-
-  try:
-    with db.session.begin():
-      existentes = existing_records(table_def, delete_values)
-      historico_registros = len(existentes)
-      if existentes:
-        move_to_history(existentes, table_def.historico_model, id_usuario, fecha)
-
+      delete_values: set[str] = set()
       layer.ResetReading()
       feature = layer.GetNextFeature()
       while feature is not None:
-        nuevo = table_def.builder(feature, fields, id_usuario, fecha)
-        db.session.add(nuevo)
-        insertados += 1
+        value = get_value(feature, fields.get(table_def.delete_key))
+        if value:
+          delete_values.add(value)
         feature = layer.GetNextFeature()
-  except Exception as exc:  # pragma: no cover
-    current_app.logger.exception("Error al cargar shapefile")
-    db.session.rollback()
-    datasource = None
-    layer = None
-    return (
-      jsonify({"estado": False, "mensaje": f"Error al procesar los datos: {exc}"}),
-      500,
-    )
-  finally:
-    layer = None
-    datasource = None
 
-  return (
-    jsonify(
-      {
-        "estado": True,
-        "mensaje": "Datos migrados exitosamente",
-        "registrosInsertados": insertados,
-        "registrosHistorico": historico_registros,
-      }
-    ),
-    200,
-  )
+      fecha = datetime.utcnow()
+      historico_registros = 0
+      insertados = 0
+
+      try:
+        with db.session.begin():
+          existentes = existing_records(table_def, delete_values)
+          historico_registros = len(existentes)
+          if existentes:
+            move_to_history(existentes, table_def.historico_model, id_usuario, fecha)
+
+          layer.ResetReading()
+          feature = layer.GetNextFeature()
+          while feature is not None:
+            nuevo = table_def.builder(feature, fields, id_usuario, fecha)
+            db.session.add(nuevo)
+            insertados += 1
+            feature = layer.GetNextFeature()
+      except Exception as exc:  # pragma: no cover
+        current_app.logger.exception("Error al cargar shapefile")
+        db.session.rollback()
+        datasource = None
+        layer = None
+        return (
+          jsonify({"estado": False, "mensaje": f"Error al procesar los datos: {exc}"}),
+          500,
+        )
+      finally:
+        layer = None
+        datasource = None
+
+      return (
+        jsonify(
+          {
+            "estado": True,
+            "mensaje": "Datos migrados exitosamente",
+            "registrosInsertados": insertados,
+            "registrosHistorico": historico_registros,
+          }
+        ),
+        200,
+      )
