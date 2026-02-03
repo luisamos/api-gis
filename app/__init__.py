@@ -56,13 +56,6 @@ def create_app() -> Flask:
   configured_level = configure_logging()
   app.logger.setLevel(configured_level)
 
-  if(IS_DEV):
-    CORS(app, resources={
-      r"/api-gis/*": {
-          "origins": "http://127.0.0.2:5173"
-      }
-    })
-
   base_dir = Path(__file__).resolve().parent.parent
 
   directories = prepare_directories(base_dir)
@@ -93,7 +86,14 @@ def create_app() -> Flask:
   jwt.init_app(app)
 
   register_routes(app)
-  CORS(app)
+  if(IS_DEV):
+    CORS(app, resources={
+      r"/api-gis/*": {
+          "origins": "http://127.0.0.2:5173"
+      }
+    })
+  else:
+    CORS(app)
 
   @app.shell_context_processor
   def _shell_context():  # pragma: no cover - helper for interactive shell

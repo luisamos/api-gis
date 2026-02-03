@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import bcrypt
+import datetime
 from flask import Blueprint, current_app, jsonify, request
-from flask_jwt_extended import create_access_token, get_csrf_token
+from flask_jwt_extended import create_access_token, get_csrf_token, jwt_required, get_jwt
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
@@ -11,7 +12,7 @@ from app.models.usuario import Usuario
 
 acceso_bp = Blueprint("acceso", __name__, url_prefix="/token")
 
-@acceso_bp.route("/acceso/", methods=["POST"])
+@acceso_bp.route("/acceso", methods=["POST"], strict_slashes=False)
 def acceso_visor():
   try:
     usuario = request.json.get("usuario") if request.is_json else None
@@ -66,7 +67,7 @@ def acceso_visor():
       additional_claims=claims,
     )
     csrf_token = get_csrf_token(access_token)
-    resp = jsonify({"estado": True})
+    resp = jsonify({"estado": True, "datos": {"nombres_apellidos": nombres_apellidos, "correo_electronico": usuario_db.email}})
     resp.set_cookie(
       "access_geotoken",
       access_token,
@@ -88,6 +89,25 @@ def acceso_visor():
   except Exception as exc:  # pragma: no cover - fallback
     current_app.logger.exception("🔴 Error interno del servidor: %s", exc)
     return jsonify({"error": "Error interno del servidor", "detalle": str(exc)}), 500
+
+@acceso_bp.route("/verificar/", methods=["POST"])
+@jwt_required()
+def verificar_expiracion():
+    try:
+        token_data = get_jwt()  # Obtener los datos del token
+        exp_timestamp = token_data["exp"]  # Obtener la fecha de expiración (timestamp UNIX)
+
+        # Convertir a formato de fecha
+        exp_datetime = datetime.datetime.fromtimestamp(exp_timestamp, tz=datetime.UTC)
+        now_datetime = datetime.datetime.now(tz=datetime.UTC)
+
+        if now_datetime > exp_datetime:
+            return jsonify({"estado": False, "mensaje": "El token ha expirado"}), 401
+        else:
+            return jsonify({"estado": True, "mensaje": "El token es válido", "expira_en": str(exp_datetime - now_datetime)}), 200
+
+    except Exception as e:
+        return jsonify({"estado": False, "error": str(e)}), 500
 
 def password_matches(stored_password: str, plain_password: str) -> bool:
   if not stored_password:
