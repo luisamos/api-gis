@@ -216,3 +216,13 @@ sqlalchemy.exc.InvalidRequestError: One or more mappers failed to initialize - c
 2026-02-02 17:51:56,254 [INFO] werkzeug -  * Debugger PIN: 627-558-473
 2026-02-02 17:52:08,762 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:52:08] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
 2026-02-02 17:52:08,884 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 17:52:08] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 21:35:11,416 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-02 21:35:11,416 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-02 21:35:11,418 [INFO] werkzeug -  * Restarting with stat
+2026-02-02 21:35:14,325 [WARNING] werkzeug -  * Debugger is active!
+2026-02-02 21:35:14,331 [INFO] werkzeug -  * Debugger PIN: 772-325-138
+2026-02-02 21:36:43,381 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 21:36:43] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 21:36:43,569 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 21:36:43] "POST /token/acceso/ HTTP/1.1" 200 -
+2026-02-02 21:36:57,275 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 21:36:57] "[32mPOST /token/acceso HTTP/1.1[0m" 308 -
+2026-02-02 21:36:57,366 [INFO] werkzeug - 127.0.0.1 - - [02/Feb/2026 21:36:57] "POST /token/acceso/ HTTP/1.1" 200 -
