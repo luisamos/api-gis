@@ -7,6 +7,7 @@ from flask_jwt_extended import create_access_token, get_csrf_token, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
+from app.config import IS_DEV, ENV
 from app.models.rol import Rol, RolPermiso
 from app.models.usuario import Usuario
 
@@ -18,7 +19,7 @@ def acceso_visor():
     usuario = request.json.get("usuario") if request.is_json else None
     contrasena = request.json.get("contrasena") if request.is_json else None
 
-    if current_app.config.get("ENV") == "Development":
+    if ENV == "Development":
       current_app.logger.debug("🟢\tUsuario: %s", usuario)
       current_app.logger.debug("🟢\tContraseña: %s", contrasena)
 
@@ -42,7 +43,7 @@ def acceso_visor():
 
     usuario_db, rol_db = resultado
     if usuario_db.estado == "0":
-      return jsonify({"estado": False, "msj": "Usuario deshabilitado"}), 200
+      return jsonify({"estado": False, "msj": "Usuario deshabilitado, habilitarlo desde el módulo principal."}), 200
     if not password_matches(usuario_db.password, contrasena):
       return jsonify({"estado": False}), 200
     nombres_apellidos = " ".join(
@@ -68,20 +69,12 @@ def acceso_visor():
     )
     csrf_token = get_csrf_token(access_token)
     resp = jsonify({"estado": True, "datos": {"nombres_apellidos": nombres_apellidos, "correo_electronico": usuario_db.email}})
-    resp.set_cookie(
-      "access_geotoken",
-      access_token,
-      httponly=True,
-      secure=current_app.config.get("JWT_COOKIE_SECURE", True),
-      samesite=current_app.config.get("JWT_COOKIE_SAMESITE", "Lax"),
-    )
-    resp.set_cookie(
-      "csrf_access_token",
-      csrf_token,
-      httponly=False,
-      secure=current_app.config.get("JWT_COOKIE_SECURE", True),
-      samesite=current_app.config.get("JWT_COOKIE_SAMESITE", "Lax"),
-    )
+    if IS_DEV:
+      resp.set_cookie("access_geotoken", access_token, httponly=True, secure=True, samesite="None", partitioned=True)
+      resp.set_cookie("csrf_access_token", csrf_token, httponly=False, secure=True, samesite="None", partitioned=True)
+    else:
+      resp.set_cookie("access_geotoken", access_token, httponly=True, secure=True, samesite="Lax")
+      resp.set_cookie("csrf_access_token", csrf_token, httponly=False, secure=True, samesite="Lax")
     return resp, 200
   except SQLAlchemyError as exc:
     current_app.logger.exception("🔴 Error de base de datos: %s", exc)

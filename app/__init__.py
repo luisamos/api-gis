@@ -61,7 +61,7 @@ def create_app() -> Flask:
   directories = prepare_directories(base_dir)
 
   app.config.update(
-    SQLALCHEMY_DATABASE_URI=os.getenv("DATABASE_URL", DB_URL),
+    SQLALCHEMY_DATABASE_URI=DB_URL,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     JSON_SORT_KEYS=False,
     ID_UBIGEO=ID_UBIGEO,
@@ -77,21 +77,13 @@ def create_app() -> Flask:
     **directories,
   )
 
-  if IS_DEV:
-    app.config["ENV"] = "Development"
-    app.config["DEBUG"] = True
-
   db.init_app(app)
   migrate.init_app(app, db)
   jwt.init_app(app)
 
   register_routes(app)
   if(IS_DEV):
-    CORS(app, resources={
-      r"/api-gis/*": {
-          "origins": "http://127.0.0.2:5173"
-      }
-    })
+    CORS(app, resources={r"/*": {"origins": "http://127.0.0.2:5173"}}, supports_credentials=True)
   else:
     CORS(app)
 
