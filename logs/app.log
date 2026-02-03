@@ -31,3 +31,19 @@
 2026-02-03 16:10:45,450 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:10:45] "POST /validar_shapefile HTTP/1.1" 200 -
 2026-02-03 16:10:52,612 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:10:52] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
 2026-02-03 16:10:52,720 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:10:52] "POST /cargar_shapefile HTTP/1.1" 200 -
+2026-02-03 16:15:21,010 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-03 16:15:21,011 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-03 16:15:21,013 [INFO] werkzeug -  * Restarting with stat
+2026-02-03 16:15:21,943 [WARNING] werkzeug -  * Debugger is active!
+2026-02-03 16:15:21,947 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-03 16:15:23,807 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:15:23] "OPTIONS /token/acceso HTTP/1.1" 200 -
+2026-02-03 16:15:24,037 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:15:24] "POST /token/acceso HTTP/1.1" 200 -
+2026-02-03 16:16:04,199 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:16:04] "OPTIONS /token/salir HTTP/1.1" 200 -
+2026-02-03 16:16:04,217 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:16:04] "POST /token/salir HTTP/1.1" 200 -
+2026-02-03 16:20:15,171 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:20:15] "OPTIONS /token/acceso HTTP/1.1" 200 -
+2026-02-03 16:20:15,254 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:20:15] "POST /token/acceso HTTP/1.1" 200 -
+2026-02-03 16:38:01,635 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:38:01] "OPTIONS /token/salir HTTP/1.1" 200 -
+2026-02-03 16:38:01,640 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 16:38:01] "POST /token/salir HTTP/1.1" 200 -
+2026-02-03 17:25:42,739 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 17:25:42] "OPTIONS /token/acceso HTTP/1.1" 200 -
+2026-02-03 17:25:42,847 [INFO] werkzeug - 127.0.0.1 - - [03/Feb/2026 17:25:42] "POST /token/acceso HTTP/1.1" 200 -
