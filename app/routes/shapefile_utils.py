@@ -13,14 +13,20 @@ from typing import Callable, Dict, Iterable, Optional, Tuple
 
 from flask import current_app, jsonify
 
-try:  # pragma: no cover - import depends on system packages
+try:
     from osgeo import ogr
-except ImportError:  # pragma: no cover - handled gracefully below
+except ImportError:
     ogr = None
 
 from functools import wraps
-from pyproj import CRS
-from pyproj.exceptions import CRSError
+try:
+    from pyproj import CRS
+    from pyproj.exceptions import CRSError
+except ImportError:
+    CRS = None
+
+    class CRSError(Exception):
+        pass
 from werkzeug.datastructures import FileStorage
 from app.config import ID_UBIGEO
 
@@ -209,6 +215,12 @@ def get_layer_srid(layer, expected_epsg: Optional[int] = None) -> Optional[str]:
   if authority_name and authority_code:
       return authority_code
 
+  if CRS is None:
+      current_app.logger.warning(
+          "pyproj no está instalado; no se puede inferir EPSG desde WKT sin códigos de autoridad"
+      )
+      return None
+
   try:
       wkt = spatial_ref.ExportToWkt()
   except RuntimeError:
@@ -246,11 +258,11 @@ def validate_fields(
 ):
   """Validate the values of the fields defined in *field_map*.
 
-  Returns a tuple ``(errores, registros_vacios, contador)`` where ``errores`` is a␊
-  dictionary mapping field keys to invalid record identifiers (``id`` or␊
-  ``objectid`` when present, otherwise the row index), ``registros_vacios``␊
-  contains the indices of rows where all tracked fields are empty, and␊
-  ``contador`` summarises the occurrences by the field indicated in␊
+  Returns a tuple ``(errores, registros_vacios, contador)`` where ``errores`` is a
+  dictionary mapping field keys to invalid record identifiers (``id`` or
+  ``objectid`` when present, otherwise the row index), ``registros_vacios``
+  contains the indices of rows where all tracked fields are empty, and
+  ``contador`` summarises the occurrences by the field indicated in
   ``report_key`` (or the value returned by ``report_transform`` when provided).
   """
 
