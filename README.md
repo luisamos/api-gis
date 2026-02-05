@@ -10,7 +10,7 @@ API destinada a la consulta y gestión catastral, que proporciona servicios para
 
 La documentación de despliegue está separada por sistema operativo:
 
-- **Linux (Ubuntu + systemd + Apache + Gunicorn):** `app/docs/DEPLOYMENT.md`
+- **Linux (Ubuntu + systemd + Apache + Gunicorn):** `app/docs/DEPLOYMENT_UBUNTU.md`
 - **Windows (IIS/FastCGI o ejecución con Waitress):** `app/docs/DEPLOYMENT_WINDOWS.md`
 
 > Recomendación: usa la guía correspondiente al sistema operativo del servidor para evitar errores de configuración de servicio, permisos y rutas.
