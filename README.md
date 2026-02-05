@@ -4,7 +4,7 @@
 
 #
 
-API para consulta y gestión catastral, servicio para el cargado de información geográfica mediante el proceso carga masiva a la tablas geográficas desarrolladas para la visualización del catastro municipal.
+API destinada a la consulta y gestión catastral, que proporciona servicios para la incorporación de información geográfica a través de procesos de carga masiva en tablas geográficas diseñadas para la visualización del catastro municipal.
 
 ## Guías de despliegue
 
