@@ -1,4 +1,4 @@
-# Guía de despliegue en Ubuntu 24.04 en adelante
+# Guía de despliegue en Linux (Ubuntu 24.04 en adelante)
 
 Este documento describe cómo ejecutar **API-GIS** en un servidor Ubuntu 24.04 utilizando Python 3.12, `gunicorn` y Apache como proxy inverso escuchando en HTTPS (puerto 443) y reenviando las peticiones al servicio Python en el puerto 5000.
 
@@ -73,6 +73,7 @@ ExecStart=/apps/venv/api-gis/bin/gunicorn \
   --bind unix:/run/geocatastro/geocatastro.sock \
   --timeout 90 \
   --log-level info \
+  --capture-output \
   --access-logfile /apps/www/api-gis/logs/access.log \
   --error-logfile /apps/www/api-gis/logs/error.log \
   "app:create_app()"
@@ -112,10 +113,11 @@ sudo systemctl start geocatastro
 sudo systemctl restart geocatastro
 sudo systemctl status geocatastro --no-pager
 
-sudo journalctl -u geocatastro -f
+sudo journalctl -u geocatastro -n 200 --no-pager
+
 ```
 
-El servicio quedará escuchando en `http://127.0.0.1:5000/` (o en la IP del servidor si abres el puerto).
+El servicio quedará escuchando en el socket Unix `/run/geocatastro/geocatastro.sock`.
 
 ## 4. Dar permisos a www-data en uploads/
 
@@ -185,7 +187,23 @@ Con estos pasos la aplicación queda desplegada en Ubuntu 24.04, atendiendo inte
 
 ### El servicio `geocatastro.service` falla con `status=3`
 
-`gunicorn` devuelve el código de salida `3` cuando no puede importar la aplicación WSGI. En la mayoría de servidores ocurre porque las dependencias de GDAL/OGR no están completamente instaladas. Comprueba lo siguiente:
+`gunicorn` devuelve el código de salida `3` cuando no puede importar la aplicación WSGI. Antes de reiniciar varias veces, revisa el traceback completo:
+
+```bash
+sudo systemctl stop geocatastro.service
+sudo journalctl -u geocatastro.service -n 120 --no-pager
+sudo tail -n 120 /apps/www/api-gis/logs/error.log
+```
+
+Si el traceback muestra errores de importación de módulos, valida que el entorno virtual y permisos estén bien:
+
+```bash
+sudo -u www-data /apps/venv/api-gis/bin/python -c "import flask, sqlalchemy, osgeo; print('imports-ok')"
+sudo chown -R www-data:www-data /apps/www/api-gis
+sudo chmod 640 /apps/www/api-gis/.env
+```
+
+En muchos servidores el fallo se debe a GDAL/OGR incompleto. Comprueba lo siguiente:
 
 ```bash
 python3 - <<'PY'
@@ -200,6 +218,12 @@ Si el comando falla, instala los paquetes del sistema y vuelve a compilar el mó
 sudo apt install -y gdal-bin libgdal-dev
 source /apps/venv/api-gis/bin/activate
 pip install --no-cache-dir --force-reinstall gdal==3.8.4
+```
+
+También puedes ejecutar gunicorn manualmente con el mismo usuario del servicio para ver el error exacto en consola:
+
+```bash
+sudo -u www-data -H bash -lc 'cd /apps/www/api-gis && /apps/venv/api-gis/bin/gunicorn --workers 1 --bind 127.0.0.1:5000 --log-level debug "app:create_app()"'
 ```
 
 Tras la reinstalación reinicia el servicio y revisa el log:
