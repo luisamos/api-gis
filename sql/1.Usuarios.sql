@@ -35,6 +35,6 @@ COPY catastro.tf_usuarios FROM 'C:\apps\python\flask\api-gis\sql\tf_usuarios.csv
 COPY catastro.role_has_permissions FROM 'C:\apps\python\flask\api-gis\sql\role_has_permissions.csv' CSV HEADER;
 
 UPDATE catastro.tf_usuarios SET password = '$2b$10$Bn9xPiBWXOb2aPV4WMVpO.J9GTUTMB5v7B.tFFG1fnvxNX2X7i10G'
-WHERE id_usuario IN (48, 54);
+WHERE id_usuario IN (49, 50);
 
-SELECT * FROM catastro.tf_usuarios WHERE id_usuario IN (48, 54);
+SELECT * FROM catastro.tf_usuarios WHERE id_usuario IN (49, 50);
