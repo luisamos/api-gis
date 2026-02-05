@@ -7,7 +7,6 @@ from typing import Callable, Dict, Iterable, Optional, Type
 
 from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request, get_jwt
-from osgeo import ogr
 from sqlalchemy import select
 
 from app.config import IS_DEV

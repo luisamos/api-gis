@@ -143,3 +143,13 @@
 2026-02-04 15:44:42,448 [INFO] werkzeug - 127.0.0.1 - - [04/Feb/2026 15:44:42] "POST /validar_shapefile HTTP/1.1" 200 -
 2026-02-04 15:45:02,451 [INFO] werkzeug - 127.0.0.1 - - [04/Feb/2026 15:45:02] "OPTIONS /cargar_shapefile HTTP/1.1" 200 -
 2026-02-04 15:45:02,608 [INFO] werkzeug - 127.0.0.1 - - [04/Feb/2026 15:45:02] "POST /cargar_shapefile HTTP/1.1" 200 -
+2026-02-05 11:16:59,672 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-05 11:16:59,673 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-05 11:16:59,680 [INFO] werkzeug -  * Restarting with stat
+2026-02-05 11:17:00,751 [WARNING] werkzeug -  * Debugger is active!
+2026-02-05 11:17:00,757 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-05 11:45:00,688 [INFO] werkzeug -  * Detected change in 'C:\\apps\\python\\flask\\api-gis\\app\\routes\\geodata.py', reloading
+2026-02-05 11:45:00,927 [INFO] werkzeug -  * Restarting with stat
+2026-02-05 11:45:03,265 [WARNING] werkzeug -  * Debugger is active!
+2026-02-05 11:45:03,274 [INFO] werkzeug -  * Debugger PIN: 627-558-473
