@@ -28,7 +28,13 @@ def acceso_visor():
 
     resultado = (
       db.session.query(Usuario, Rol)
-      .join(RolPermiso, RolPermiso.permission_id == Usuario.id_usuario)
+      .join(
+        RolPermiso,
+        db.and_(
+          RolPermiso.model_id == Usuario.id_usuario,
+          RolPermiso.model_type == 'App\\Models\\User',
+        )
+      )
       .join(Rol, Rol.id == RolPermiso.role_id)
       .filter(
         Usuario.usuario == usuario,
@@ -37,6 +43,7 @@ def acceso_visor():
       .order_by(Usuario.usuario, Rol.name)
       .first()
     )
+    print(resultado)
 
     if not resultado:
       return jsonify({"estado": False}), 200
