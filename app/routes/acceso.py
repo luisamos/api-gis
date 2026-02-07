@@ -43,7 +43,6 @@ def acceso_visor():
       .order_by(Usuario.usuario, Rol.name)
       .first()
     )
-    print(resultado)
 
     if not resultado:
       return jsonify({"estado": False}), 200

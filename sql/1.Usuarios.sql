@@ -40,5 +40,7 @@ WHERE id_usuario IN (25);
 
 SELECT * FROM catastro.tf_usuarios WHERE id_usuario IN (25, 49, 50);
 
+SELECT gid, cod_sector, id_ubigeo, id_sector, area_grafi, geom FROM geo.tg_sectores;
+
 
 

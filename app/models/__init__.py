@@ -8,7 +8,7 @@ from .parque import Parque, ParqueHistorico
 from .comercio import Comercio, ComercioHistorico
 from .puerta import Puerta, PuertaHistorico
 from .usuario import Usuario
-from .rol import Rol, RolPermiso, Permiso
+from .rol import Rol, RolPermiso
 
 __all__ = [
   "Sector",
@@ -31,6 +31,5 @@ __all__ = [
   "PuertaHistorico",
   "Usuario",
   "Rol",
-  "RolPermiso",
-  "Permiso"
+  "RolPermiso"
 ]
