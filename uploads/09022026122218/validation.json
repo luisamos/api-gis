@@ -1,0 +1,11 @@
+{
+  "validado": true,
+  "fields": {
+    "cod_sector": "cod_sector",
+    "cod_mzna": "cod_mzna",
+    "cod_lote": "cod_lote",
+    "cuc": "cuc"
+  },
+  "tabla": "Lote",
+  "fechaValidacion": "2026-02-09T17:22:19.891655"
+}

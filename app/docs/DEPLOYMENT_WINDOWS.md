@@ -2,6 +2,37 @@
 
 Este documento describe una guía base para desplegar **API-GIS** en Windows.
 
+## Instalador automático (Python + servicio visible en services.msc)
+
+Si deseas una experiencia similar a pgAdmin4 (instalar dependencias y dejar un servicio registrado), puedes usar:
+
+`scripts/windows/install_api_gis.ps1`
+
+Este script:
+
+1. Valida que se ejecute como Administrador.
+2. Instala Python silenciosamente si no existe el launcher `py`.
+3. Crea `.venv` dentro del proyecto.
+4. Instala dependencias desde `requirements.txt`.
+5. Genera `run_api_gis.bat`.
+6. Crea/actualiza un servicio de Windows para API-GIS usando `sc.exe`.
+
+### Uso rápido
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+powershell -ExecutionPolicy Bypass -File scripts/windows/install_api_gis.ps1 \
+  -InstallRoot "C:\apps\api-gis" \
+  -ServiceName "geoCatastro" \
+  -PythonVersion "3.12.7" \
+  -ListenHost "0.0.0.0" \
+  -ListenPort 5000
+```
+
+Luego abre `services.msc` y valida que aparezca el servicio **geoCatastro**.
+
+> Importante: antes de iniciar la app en producción, configura las variables de entorno de base de datos (ver sección "Variables de entorno mínimas").
+
 ## Opciones recomendadas
 
 1. **IIS + FastCGI** (entorno corporativo con administración centralizada).
@@ -34,7 +65,7 @@ setx DB_PORT 5432
 setx DB_NAME catastro
 ```
 
-## Verificación rápida
+## Verificación rápida␊
 
 ```powershell
 C:\apps\venv\api-gis\Scripts\python -c "from app import create_app; app=create_app(); print('ok')"
