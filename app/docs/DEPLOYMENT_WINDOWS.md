@@ -1,27 +1,57 @@
-# Guía de despliegue en Windows
+# Despliegue en Windows
 
-Este documento describe una guía base para desplegar **API-GIS** en Windows.
+Esta guía documenta **únicamente** el flujo del instalador automático para API-GIS en Windows:
 
-## Instalador automático (Python + servicio visible en services.msc)
+- Python + entorno virtual
+- Dependencias instaladas automáticamente
+- Servicio de Windows visible en `services.msc`
 
-Si deseas una experiencia similar a pgAdmin4 (instalar dependencias y dejar un servicio registrado), puedes usar:
+Script utilizado:
 
-`scripts/windows/install_api_gis.ps1`
+- `app/docs/install_api_gis.ps1`
 
-Este script:
+---
 
-1. Valida que se ejecute como Administrador.
-2. Instala Python silenciosamente si no existe el launcher `py`.
-3. Crea `.venv` dentro del proyecto.
-4. Instala dependencias desde `requirements.txt`.
-5. Genera `run_api_gis.bat`.
-6. Crea/actualiza un servicio de Windows para API-GIS usando `sc.exe`.
+## 1) Qué hace el instalador
 
-### Uso rápido
+Al ejecutarlo como administrador, el script:
+
+1. Valida permisos de administrador.
+2. Verifica que exista la carpeta del proyecto y `requirements.txt`.
+3. Instala Python silenciosamente si no existe `py` (Python Launcher).
+4. Crea `.venv` en la raíz del proyecto (si no existe).
+5. Instala/actualiza dependencias del proyecto.
+6. Genera `run_api_gis.bat` para levantar la app con Waitress.
+7. Crea (o actualiza) un servicio de Windows con inicio automático.
+8. Inicia el servicio y deja listo el despliegue.
+
+---
+
+## 2) Prerrequisitos antes de ejecutar
+
+1. Tener el proyecto API-GIS ya copiado en disco, por ejemplo: `C:\apps\api-gis`.
+2. Confirmar que en esa ruta exista `requirements.txt`.
+3. Abrir **PowerShell como Administrador**.
+4. Definir/validar variables de entorno de base de datos para la app (si aplican en tu entorno productivo).
+
+---
+
+## 3) Ejecución paso a paso
+
+### Paso 1. Abrir PowerShell como administrador
+
+Inicia una consola PowerShell con privilegios de administrador.
+
+### Paso 2. Permitir ejecución de scripts en la sesión actual
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
-powershell -ExecutionPolicy Bypass -File scripts/windows/install_api_gis.ps1 \
+```
+
+### Paso 3. Ejecutar instalador
+
+```powershell
+powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 \
   -InstallRoot "C:\apps\api-gis" \
   -ServiceName "geoCatastro" \
   -PythonVersion "3.12.7" \
@@ -29,46 +59,64 @@ powershell -ExecutionPolicy Bypass -File scripts/windows/install_api_gis.ps1 \
   -ListenPort 5000
 ```
 
-Luego abre `services.msc` y valida que aparezca el servicio **geoCatastro**.
+### Paso 4. Verificar creación del servicio
 
-> Importante: antes de iniciar la app en producción, configura las variables de entorno de base de datos (ver sección "Variables de entorno mínimas").
+1. Ejecuta `services.msc`.
+2. Busca el servicio con el nombre configurado en `-ServiceName` (ejemplo: `geoCatastro`).
+3. Verifica que el tipo de inicio sea **Automático** y que esté en estado **En ejecución**.
 
-## Opciones recomendadas
+---
 
-1. **IIS + FastCGI** (entorno corporativo con administración centralizada).
-2. **Servicio de Windows + Waitress** (opción simple para publicar la app Flask).
+## 4) Parámetros del script
 
-## Prerrequisitos
+- `-InstallRoot`: ruta donde está el proyecto API-GIS. Debe contener `requirements.txt`.
+- `-ServiceName`: nombre interno del servicio Windows.
+- `-PythonVersion`: versión exacta de Python a descargar si `py` no está instalado.
+- `-ListenHost`: interfaz de escucha de Waitress (ejemplo: `0.0.0.0`).
+- `-ListenPort`: puerto de escucha (ejemplo: `5000`).
 
-- Python 3.12+
-- Visual C++ Build Tools (si alguna dependencia lo requiere)
-- Acceso a PostgreSQL
-- Variables de entorno equivalentes al archivo `.env`
+---
 
-## Entorno virtual e instalación
+## 5) Validaciones rápidas post-instalación
 
-```powershell
-cd C:\apps\api-gis
-py -3.12 -m venv C:\apps\venv\api-gis
-C:\apps\venv\api-gis\Scripts\activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-## Variables de entorno mínimas
+### Ver estado del servicio por consola
 
 ```powershell
-setx DB_USER postgres
-setx DB_PASS tu_password
-setx DB_HOST 127.0.0.1
-setx DB_PORT 5432
-setx DB_NAME catastro
+sc.exe query geoCatastro
 ```
 
-## Verificación rápida
+### Probar respuesta HTTP local
 
 ```powershell
-C:\apps\venv\api-gis\Scripts\python -c "from app import create_app; app=create_app(); print('ok')"
+curl http://127.0.0.1:5000/
 ```
 
-Si el comando imprime `ok`, la app carga correctamente y puede integrarse con IIS/FastCGI o ejecutarse con Waitress.
+> Ajusta nombre de servicio, host y puerto según los parámetros que usaste.
+
+---
+
+## 6) Solución de problemas frecuentes
+
+- **"Este script debe ejecutarse como Administrador"**
+  - Cierra la consola y vuelve a abrir PowerShell como administrador.
+
+- **"No existe la carpeta del proyecto"**
+  - Revisa el valor de `-InstallRoot`.
+
+- **"No se encontró requirements.txt"**
+  - Verifica que el proyecto esté completo en la ruta indicada.
+
+- **El servicio no inicia**
+  - Revisa si el puerto está en uso.
+  - Confirma variables de entorno/configuración de base de datos.
+  - Valida que `run_api_gis.bat` exista en la raíz del proyecto.
+
+---
+
+## 7) Resultado esperado
+
+Al finalizar correctamente:
+
+- API-GIS queda instalado con su `.venv`.
+- El servicio queda registrado en Windows y visible en `services.msc`.
+- La aplicación inicia automáticamente con el sistema.
