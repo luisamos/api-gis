@@ -1,11 +1,11 @@
 --
 -- FECHA DE CREACIÓN 	 : 22/10/2024
--- FECHA DE MODIFICACIÓN : 31/10/2025
+-- FECHA DE MODIFICACIÓN : 10/02/2026
 --
 
 -- 01. Cuenta con y/o sin ficha catastral
---DROP VIEW IF EXISTS geo.v_lotes;
-CREATE OR REPLACE VIEW geo.v_lotes AS
+--DROP VIEW IF EXISTS geo.v_lote;
+CREATE OR REPLACE VIEW geo.v_lote AS
 SELECT DISTINCT
 a.gid,
 b.id_ficha,
@@ -13,7 +13,7 @@ c.imagen_plano AS fotografia,
 b.id_lote,
 a.cod_sector,
 a.cod_mzna,
-a.cod_sector || a.cod_mzna || a.cod_lote AS lotes_id,
+a.cod_sector || a.cod_mzna || a.cod_lote AS lote_id,
 a.cod_lote,
 CASE
 	WHEN b.id_lote IS NULL AND c.imagen_plano IS NULL THEN 0
@@ -52,20 +52,20 @@ ORDER BY existe_ficha;
 
 SELECT * FROM catastro.tf_fichas;
 
---SELECT * FROM geo.v_lotes WHERE fotografia IS NOT NULL;
---SELECT * FROM geo.v_lotes LIMIT 1;
+--SELECT * FROM geo.v_lote WHERE fotografia IS NOT NULL;
+--SELECT * FROM geo.v_lote LIMIT 1;
 
 --SELECT count(*) FROM geo.tg_lote;
 
---SELECT * FROM catastro.v_lotes LIMIT 2;
+--SELECT * FROM catastro.v_lote LIMIT 2;
 
---SELECT * FROM catastro.v_lotes WHERE nume_doc='00004431';
+--SELECT * FROM catastro.v_lote WHERE nume_doc='00004431';
 
 --SELECT * FROM catastro.personas WHERE nume_doc='23823831'
 
 -- 02. Servicios básicos
 --DROP VIEW IF EXISTS geo.v_servicios_basicos;
-CREATE OR REPLACE VIEW geo.v_servicios_basicos AS
+CREATE OR REPLACE VIEW geo.v_servicio_basico AS
 SELECT
 a.gid,
 b.id_lote,
@@ -127,8 +127,8 @@ GROUP BY a.gid, b.id_lote, d.tipo_doc, d.nume_doc, d.tipo_persona, d.ape_paterno
 ORDER BY a.gid;
 
 -- 03. Clasificación del Predio
---DROP VIEW IF EXISTS geo.v_clasificacion_predios;
-CREATE OR REPLACE VIEW geo.v_clasificacion_predios AS
+--DROP VIEW IF EXISTS geo.v_clasificacion_predio;
+CREATE OR REPLACE VIEW geo.v_clasificacion_predio AS
 SELECT
 a.gid,
 b.id_lote,
@@ -163,11 +163,11 @@ JOIN catastro.tf_fichas_individuales e ON b.id_ficha = e.id_ficha
 GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
 ORDER BY a.gid;
 
---SELECT * FROM geo.v_clasificacion_predios;
+--SELECT * FROM geo.v_clasificacion_predio;
 
 -- 04. Personas Natural / Persona Jurídica
---DROP VIEW IF EXISTS geo.v_tipos_personas;
-CREATE OR REPLACE VIEW geo.v_tipos_personas AS
+--DROP VIEW IF EXISTS geo.v_tipo_persona;
+CREATE OR REPLACE VIEW geo.v_tipo_persona AS
 SELECT
 a.gid,
 b.id_lote,
@@ -197,8 +197,8 @@ GROUP BY 1,2,3,4,5,6,7,8
 ORDER BY a.gid;
 
 -- 05. Tipo de uso
---DROP VIEW IF EXISTS geo.v_tipos_usos;
-CREATE OR REPLACE VIEW geo.v_tipos_usos AS
+--DROP VIEW IF EXISTS geo.v_tipo_uso;
+CREATE OR REPLACE VIEW geo.v_tipo_uso AS
 SELECT
 a.gid,
 b.id_lote,
@@ -336,9 +336,9 @@ WHERE b.tipo_ficha='01'
 GROUP BY 1,2,3,4,5,6,7,8,9
 ORDER BY a.gid;
 
--- 09. Niveles de construcción
---DROP VIEW IF EXISTS geo.v_niveles_construccion;
-CREATE OR REPLACE VIEW geo.v_niveles_construccion AS
+-- 09. Nivel de construcción
+--DROP VIEW IF EXISTS geo.v_nivel_construccion;
+CREATE OR REPLACE VIEW geo.v_nivel_construccion AS
 SELECT
 a.gid,
 b.id_lote,
@@ -372,8 +372,8 @@ GROUP BY 1,2,3,4,5,6,7,8,9
 ORDER BY a.gid;
 
 -- 10. Actividades económicas
---DROP VIEW IF EXISTS geo.v_actividades_economicas;
-CREATE VIEW geo.v_actividades_economicas AS
+--DROP VIEW IF EXISTS geo.v_actividad_economica;
+CREATE VIEW geo.v_actividad_economica AS
 SELECT
 a.gid AS gid,
 b.id_lote,

@@ -597,3 +597,15 @@ WHERE geo.tg_sector.cod_sector IN (%(cod_sector_1_1)s, %(cod_sector_1_2)s, %(cod
 2026-02-10 08:32:55,658 [INFO] werkzeug -  * Debugger PIN: 627-558-473
 2026-02-10 08:32:57,375 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 08:32:57] "OPTIONS /token/acceso HTTP/1.1" 200 -
 2026-02-10 08:32:57,610 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 08:32:57] "POST /token/acceso HTTP/1.1" 200 -
+2026-02-10 12:42:19,823 [INFO] werkzeug - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.2:5000
+2026-02-10 12:42:19,824 [INFO] werkzeug - [33mPress CTRL+C to quit[0m
+2026-02-10 12:42:19,831 [INFO] werkzeug -  * Restarting with stat
+2026-02-10 12:42:20,904 [WARNING] werkzeug -  * Debugger is active!
+2026-02-10 12:42:20,910 [INFO] werkzeug -  * Debugger PIN: 627-558-473
+2026-02-10 12:42:59,423 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 12:42:59] "OPTIONS /token/acceso HTTP/1.1" 200 -
+2026-02-10 12:42:59,650 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 12:42:59] "POST /token/acceso HTTP/1.1" 200 -
+2026-02-10 12:46:26,521 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 12:46:26] "OPTIONS /token/acceso HTTP/1.1" 200 -
+2026-02-10 12:46:26,531 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 12:46:26] "POST /token/acceso HTTP/1.1" 200 -
+2026-02-10 12:46:40,181 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 12:46:40] "OPTIONS /token/acceso HTTP/1.1" 200 -
+2026-02-10 12:46:40,251 [INFO] werkzeug - 127.0.0.1 - - [10/Feb/2026 12:46:40] "POST /token/acceso HTTP/1.1" 200 -
