@@ -1,4 +1,4 @@
-# Guía de despliegue en Windows Server
+# Guía de despliegue en Windows
 
 Este documento describe una guía base para desplegar **API-GIS** en Windows.
 
@@ -65,7 +65,7 @@ setx DB_PORT 5432
 setx DB_NAME catastro
 ```
 
-## Verificación rápida␊
+## Verificación rápida
 
 ```powershell
 C:\apps\venv\api-gis\Scripts\python -c "from app import create_app; app=create_app(); print('ok')"
