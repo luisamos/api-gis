@@ -63,7 +63,7 @@ powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRo
 6. Instala dependencias sin compilar GDAL desde fuente.
 7. Instala GDAL desde wheel local en `app/lib`.
 8. Genera `run_api_gis.bat`.
-9. Descarga NSSM (si no existe) en `tools\nssm.exe`.
+9. Usa NSSM desde el paquete local `app/lib/nssm-2.24.zip` y lo copia en `tools\nssm.exe`.
 10. Crea o actualiza el servicio Windows usando NSSM y lo inicia.
 
 ## 6. Verificaciones post-instalación
