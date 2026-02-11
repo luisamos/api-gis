@@ -2,7 +2,7 @@
 param(
     [string]$InstallRoot = "C:\apps\python\api-gis",
     [string]$VenvPath = "C:\apps\python\.venv",
-    [string]$ServiceName = "geoCatastro",
+    [string]$ServiceName = "",
     [string]$PythonVersion = "3.13.2",
     [string]$ListenHost = "0.0.0.0",
     [int]$ListenPort = 5000
@@ -206,12 +206,35 @@ function Ensure-Nssm {
 
     New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
 
-    $zipUrl = "https://nssm.cc/release/nssm-2.24.zip"
+    $zipUrls = @(
+        "https://nssm.cc/release/nssm-2.24.zip",
+        "https://github.com/kirillkovalenko/nssm/releases/download/2.24-101-g897c7ad/nssm-2.24-101-g897c7ad.zip"
+    )
     $zipPath = Join-Path $env:TEMP "nssm-2.24.zip"
     $extractDir = Join-Path $env:TEMP "nssm-2.24"
+    $downloaded = $false
+    $downloadErrors = @()
 
-    Write-Host "Descargando NSSM desde $zipUrl"
-    Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
+    # Forzar protocolos modernos para evitar errores de handshake en entornos corporativos.
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
+
+    foreach ($zipUrl in $zipUrls) {
+        Write-Host "Descargando NSSM desde $zipUrl"
+        try {
+            Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
+            $downloaded = $true
+            break
+        }
+        catch {
+            $message = $_.Exception.Message
+            $downloadErrors += "- ${zipUrl}: $message"
+            Write-Warning "No se pudo descargar NSSM desde $zipUrl. Se intentará otra fuente si está disponible."
+        }
+    }
+
+    if (-not $downloaded) {
+        throw "No se pudo descargar NSSM desde ninguna fuente disponible.`n$($downloadErrors -join "`n")"
+    }
 
     if (Test-Path $extractDir) {
         Remove-Item -Path $extractDir -Recurse -Force
@@ -220,7 +243,9 @@ function Ensure-Nssm {
     Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
 
     $archFolder = if ([Environment]::Is64BitOperatingSystem) { "win64" } else { "win32" }
-    $sourceExe = Join-Path $extractDir "nssm-2.24\$archFolder\nssm.exe"
+    $sourceExe = Get-ChildItem -Path $extractDir -Filter "nssm.exe" -Recurse -ErrorAction SilentlyContinue |
+        Where-Object { $_.FullName -match "\\$archFolder\\nssm\.exe$" } |
+        Select-Object -ExpandProperty FullName -First 1
 
     if (-not (Test-Path $sourceExe)) {
         throw "No se encontró nssm.exe en el paquete descargado."
@@ -291,7 +316,7 @@ function Create-OrUpdate-Service {
             throw "No se pudo crear el servicio '$Name'."
         }
 
-        $null = & $nssmExe set $Name DisplayName "API-GIS Service"
+        $null = & $nssmExe set $Name DisplayName "API-GIS Service | geoCatastro"
         $null = & $nssmExe set $Name Start SERVICE_AUTO_START
     }
 
@@ -301,7 +326,7 @@ function Create-OrUpdate-Service {
     $null = & $nssmExe set $Name AppRotateFiles 1
     $null = & $nssmExe set $Name AppRotateOnline 1
 
-    $null = & sc.exe description $Name "Servicio API-GIS (Flask/Waitress)"
+    $null = & sc.exe description $Name "Servicio API-GIS (geoCatastro) para el proceso de cargado del catastro predial municipal."
     if ($LASTEXITCODE -ne 0) {
         throw "No se pudo actualizar la descripción del servicio '$Name'."
     }

@@ -93,7 +93,7 @@ Test-Path "C:\apps\python\api-gis\requirements.txt"
 
 Si estás en otra ruta, corrige el comando y pasa la ruta real en `-InstallRoot`.
 
-### Error: `No se encontró requirements.txt en ...`
+### Error: `No se encontró requirements.txt en api-gis`
 
 - El proyecto está incompleto o no estás apuntando a la raíz del repositorio.
 - Asegúrate de que `requirements.txt` exista en la carpeta indicada.
