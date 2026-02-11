@@ -451,7 +451,10 @@ geodata_bp = Blueprint("geodata", __name__, url_prefix="/")
 
 @geodata_bp.route("/")
 def inicio():
-  return "🟢 API - GIS (geoCatastro) - 11/02/2026"
+  return jsonify({
+      "estado": True,
+      "mensaje": f"API - GIS (geoCatastro) - {hoy}"
+    }), 200
 
 def validar_token():
   try:
