@@ -9,6 +9,9 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::InputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 function Require-Admin {
     $currentUser = [Security.Principal.WindowsIdentity]::GetCurrent()
@@ -321,7 +324,7 @@ Ensure-Project -Root $InstallRoot
 Ensure-Python -Version $PythonVersion
 
 Install-Dependencies -Root $InstallRoot -VirtualEnvPath $VenvPath -PythonVersion $PythonVersion
-$launcher = Write-Launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort␊
+$launcher = Write-Launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort
 Create-OrUpdate-Service -Name $ServiceName -LauncherPath $launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort
 
 Write-Host "Instalación terminada."

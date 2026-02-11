@@ -7,7 +7,7 @@ from flask_jwt_extended import create_access_token, get_csrf_token, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
-from app.config import IS_DEV, ENV
+from app.config import IS_DEV
 from app.models.rol import Rol, RolPermiso
 from app.models.usuario import Usuario
 
@@ -19,7 +19,7 @@ def acceso_visor():
     usuario = request.json.get("usuario") if request.is_json else None
     contrasena = request.json.get("contrasena") if request.is_json else None
 
-    if ENV == "Development":
+    if IS_DEV:
       current_app.logger.debug("🟢\tUsuario: %s", usuario)
       current_app.logger.debug("🟢\tContraseña: %s", contrasena)
 

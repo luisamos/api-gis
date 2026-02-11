@@ -9,9 +9,8 @@ DB_PORT= os.getenv('DB_PORT')
 DB_NAME= os.getenv('DB_NAME')
 APP_HOST = os.getenv('APP_HOST')
 DEV_FRONTEND_ORIGIN = os.getenv('DEV_FRONTEND_ORIGIN')
-IS_DEV = True
-ID_UBIGEO = "080108"
-ENV = "Development"
-DEBUG = True
+IS_DEV = os.getenv('IS_DEV')
+ID_UBIGEO = os.getenv('ID_UBIGEO')
+DEBUG = os.getenv('DEBUG')
 
 DB_URL= f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}?client_encoding=utf8"
