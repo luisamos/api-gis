@@ -50,7 +50,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 ### 4.2 Ejecución estándar (ruta recomendada)
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "0.0.0.0" -ListenPort 5000
+powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "127.0.0.1" -ListenPort 5000
 ```
 
 ## 5. Qué hace el script

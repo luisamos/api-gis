@@ -4,7 +4,7 @@ param(
     [string]$VenvPath = "C:\apps\python\.venv",
     [string]$ServiceName = "",
     [string]$PythonVersion = "3.13.2",
-    [string]$ListenHost = "0.0.0.0",
+    [string]$ListenHost = "127.0.0.1",
     [int]$ListenPort = 5000
 )
 
@@ -296,7 +296,7 @@ function Create-OrUpdate-Service {
             throw "No se pudo crear el servicio '$Name'."
         }
 
-        $null = & $nssmExe set $Name DisplayName "API-GIS Service | geoCatastro"
+        $null = & $nssmExe set $Name DisplayName "API-GIS Service"
         $null = & $nssmExe set $Name Start SERVICE_AUTO_START
     }
 
@@ -332,5 +332,5 @@ Install-Dependencies -Root $InstallRoot -VirtualEnvPath $VenvPath -PythonVersion
 $launcher = Write-Launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort
 Create-OrUpdate-Service -Name $ServiceName -LauncherPath $launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort
 
-Write-Host "Instalación terminada."
+Write-Host ("Instalaci{0}n terminada." -f [char]243)
 Write-Host "Verifica el servicio en services.msc con el nombre: $ServiceName"

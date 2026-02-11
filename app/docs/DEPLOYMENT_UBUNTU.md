@@ -33,17 +33,21 @@ pip install -r requirements.txt
 Crea un archivo `.env` en la raíz del proyecto con la configuración de la base de datos y del entorno:
 
 ```ini
+DB_NAME=mdw
+DB_HOST=localhost
 DB_USER=postgres
 DB_PASS=tu_password
-DB_HOST=127.0.0.1
 DB_PORT=5432
-DB_NAME=catastro
-# Puerto/host para gunicorn
-APP_HOST=0.0.0.0
-APP_PORT=5000
-```
 
-> `APP_HOST` y `APP_PORT` son leídos por `app.py` cuando se utiliza el modo desarrollo y por `gunicorn` a través del servicio systemd que se describe más adelante.
+DEV_FRONTEND_ORIGIN=http://127.0.0.1:5173
+
+IS_DEV= True
+ID_UBIGEO = 080108
+DEBUG = True
+
+# Host para gunicorn (linux)
+APP_HOST=0.0.0.0
+```
 
 ## 3. Servicio systemd con gunicorn
 
