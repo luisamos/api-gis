@@ -48,17 +48,30 @@ function Ensure-Python {
         }
     }
 
-    & py -$majorMinor -c "import sys" *> $null
-    if ($LASTEXITCODE -ne 0) {
+    if (-not (Test-PythonLauncherVersion -MajorMinor $majorMinor)) {
         Write-Host "Python launcher detectado, pero falta Python $majorMinor. Se instalará Python $Version."
         Install-PythonRuntime -Version $Version
-        & py -$majorMinor -c "import sys" *> $null
-        if ($LASTEXITCODE -ne 0) {
+        if (-not (Test-PythonLauncherVersion -MajorMinor $majorMinor)) {
             throw "Se instaló Python $Version, pero py no detecta la versión $majorMinor. Ejecuta 'py -0p' para revisar instalaciones y vuelve a intentar."
         }
     }
 
     Write-Host "Python $majorMinor disponible en py launcher."
+}
+
+function Test-PythonLauncherVersion {
+    param([string]$MajorMinor)
+
+    $tmpOut = [System.IO.Path]::GetTempFileName()
+    $tmpErr = [System.IO.Path]::GetTempFileName()
+
+    try {
+        $process = Start-Process -FilePath "py" -ArgumentList "-$MajorMinor", "-c", "import sys" -Wait -PassThru -NoNewWindow -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr
+        return ($process.ExitCode -eq 0)
+    }
+    finally {
+        Remove-Item -Path $tmpOut, $tmpErr -Force -ErrorAction SilentlyContinue
+    }
 }
 
 function Ensure-Project {
