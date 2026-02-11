@@ -186,7 +186,7 @@ function Write-Launcher {
     $content = @"
 @echo off
 cd /d "$Root"
-"$pythonExe" -m waitress --listen=$ListenAddress`:$Port app:create_app
+"$pythonExe" -m waitress --listen=$ListenAddress`:$Port wsgi:app
 "@
 
     Set-Content -Path $launcherPath -Value $content -Encoding ASCII
@@ -260,7 +260,7 @@ function Create-OrUpdate-Service {
     }
 
     $nssmExe = Ensure-Nssm -Root $Root
-    $arguments = "-m waitress --listen=$ListenAddress`:$Port app:create_app"
+    $arguments = "-m waitress --listen=$ListenAddress`:$Port wsgi:app"
     $stdoutLog = Join-Path $Root "logs\api-gis-service.log"
     $stderrLog = Join-Path $Root "logs\api-gis-service-error.log"
 

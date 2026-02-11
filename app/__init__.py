@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import timedelta
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from flask import Flask
 from flask_cors import CORS
@@ -92,3 +92,21 @@ def create_app() -> Flask:
     return {"db": db}
 
   return app
+
+_cached_app: Optional[Flask] = None
+
+def create_app(*args, **kwargs) -> Flask:
+  """Create the Flask application.
+
+  Also supports being used as a direct WSGI callable for servers that point
+  to ``app:create_app`` instead of ``wsgi:app``.
+  """
+  global _cached_app
+
+  if _cached_app is None:
+    _cached_app = _build_app()
+
+  if len(args) >= 2 and isinstance(args[0], dict) and callable(args[1]):
+    return _cached_app.wsgi_app(*args, **kwargs)
+
+  return _cached_app

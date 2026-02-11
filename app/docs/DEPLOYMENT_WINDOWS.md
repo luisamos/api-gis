@@ -109,6 +109,7 @@ Si estás en otra ruta, corrige el comando y pasa la ruta real en `-InstallRoot`
 - Revisa variables de entorno y conexión a base de datos.
 - Confirma que existe `run_api_gis.bat` en `-InstallRoot`.
 - Revisa logs del servicio en `C:\apps\python\api-gis\logs\api-gis-service.log` y `api-gis-service-error.log`.
+- Si en logs aparece `TypeError: create_app() takes 0 positional arguments but 2 were given`, vuelve a ejecutar el instalador para que el servicio use `wsgi:app` como entrada WSGI de Waitress.
 
 ## 8. Parámetros del script
 
