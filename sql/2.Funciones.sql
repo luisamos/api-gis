@@ -373,6 +373,7 @@ ORDER BY a.gid;
 
 -- 10. Actividades económicas
 --DROP VIEW IF EXISTS geo.v_actividad_economica;
+/*
 CREATE VIEW geo.v_actividad_economica AS
 SELECT
 a.gid AS gid,
@@ -405,3 +406,4 @@ LEFT JOIN catastro.tf_actividades f ON e.codi_actividad = f.codi_actividad
 WHERE b.tipo_ficha='03'
 GROUP BY 1,2,3,4,5,6,7,8,9
 ORDER BY a.gid;
+*/

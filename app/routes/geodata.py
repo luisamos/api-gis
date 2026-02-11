@@ -454,7 +454,7 @@ def inicio():
   hoy = datetime.now().strftime("%d/%m/%Y")
   return jsonify({
       "estado": True,
-      "mensaje": f"🟢 API - GIS (geoCatastro) - {hoy}"
+      "mensaje": f"API - GIS (geoCatastro) - {hoy}"
     }), 200
 
 def validar_token():
