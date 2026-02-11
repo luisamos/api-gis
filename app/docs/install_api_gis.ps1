@@ -29,7 +29,10 @@ function Install-PythonRuntime {
     Invoke-WebRequest -Uri $downloadUrl -OutFile $tmpInstaller
 
     Write-Host "Instalando Python de forma silenciosa..."
-    Start-Process -FilePath $tmpInstaller -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0" -Wait
+    & $tmpInstaller /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
+    if ($LASTEXITCODE -ne 0) {
+        throw "La instalación silenciosa de Python finalizó con código $LASTEXITCODE."
+    }
 
     Remove-Item $tmpInstaller -Force
     }
@@ -39,7 +42,7 @@ function Ensure-Python {
 
     $python = Get-Command py -ErrorAction SilentlyContinue
     $majorMinor = ($Version.Split('.')[0..1] -join '.')
-    
+
     if (-not $python) {
         Install-PythonRuntime -Version $Version
         $python = Get-Command py -ErrorAction SilentlyContinue
@@ -56,22 +59,44 @@ function Ensure-Python {
         }
     }
 
-    Write-Host "Python $majorMinor disponible en py launcher."
+    $pythonExe = Get-PythonExecutable -MajorMinor $majorMinor
+    if (-not $pythonExe) {
+        throw "Python $majorMinor está instalado, pero no se pudo resolver su ejecutable."
+    }
+
+    Write-Host "Python $majorMinor disponible: $pythonExe"
+    return $pythonExe
+}
+
+function Get-PythonExecutable {
+    param([string]$MajorMinor)
+
+    $resolved = (& py "-$MajorMinor" -c "import sys; print(sys.executable)" 2>$null)
+    if ($LASTEXITCODE -eq 0 -and $resolved) {
+        $path = $resolved | Select-Object -First 1
+        if (Test-Path $path) {
+            return $path
+        }
+    }
+
+    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+    if ($pythonCmd) {
+        $version = (& python -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>$null)
+        if ($LASTEXITCODE -eq 0 -and $version -eq $MajorMinor) {
+            return $pythonCmd.Source
+        }
+    }
+
+    return $null
 }
 
 function Test-PythonLauncherVersion {
     param([string]$MajorMinor)
 
-    $tmpOut = [System.IO.Path]::GetTempFileName()
-    $tmpErr = [System.IO.Path]::GetTempFileName()
-
-    try {
-        $process = Start-Process -FilePath "py" -ArgumentList "-$MajorMinor", "-c", "import sys" -Wait -PassThru -NoNewWindow -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr
-        return ($process.ExitCode -eq 0)
-    }
-    finally {
-        Remove-Item -Path $tmpOut, $tmpErr -Force -ErrorAction SilentlyContinue
-    }
+    # Evitar Start-Process con el launcher de Python porque puede estar bloqueado
+    # por directivas corporativas (error "Acceso denegado") en algunos equipos.
+    & py "-$MajorMinor" -c "import sys" 1>$null 2>$null
+    return ($LASTEXITCODE -eq 0)
 }
 
 function Ensure-Project {
