@@ -1,135 +1,135 @@
-# Despliegue en Windows
+# Guía de despliegue en Windows (instalador automático)
 
-Esta guía documenta **únicamente** el flujo del instalador automático para API-GIS en Windows.
-
-Script utilizado:
+Este documento explica el flujo recomendado para instalar **API-GIS** en Windows usando el script:
 
 - `app/docs/install_api_gis.ps1`
 
----
+La guía está pensada para evitar errores de rutas, por ejemplo:
 
-## 1) Estructura recomendada de carpetas (orden)
+- `No existe la carpeta del proyecto: C:\apps\python\api-gis`
 
-Se recomienda usar esta estructura:
+## 1. Estructura recomendada de carpetas
 
-- **Código fuente**: `C:\apps\python\api-gis`
-- **Entorno virtual**: `C:\apps\python\.venv`
+Usa esta estructura base:
 
-> Esta estructura ya viene como valor por defecto en el instalador.
+- **Proyecto (código):** `C:\apps\python\api-gis`
+- **Entorno virtual:** `C:\apps\python\.venv`
 
----
+> Importante: el valor de `-InstallRoot` debe coincidir exactamente con la carpeta real donde está el repositorio clonado y donde existe `requirements.txt`.
 
-## 2) Qué hace el instalador
+## 2. Prerrequisitos
 
-Al ejecutarlo como administrador, el script:
+1. Abrir **PowerShell como Administrador**.
+2. Tener conexión a internet (para instalar Python/dependencias si faltan).
+3. Contar con permisos para crear servicios de Windows.
+4. Tener el proyecto en disco (clonado o copiado).
 
-1. Valida permisos de administrador.
-2. Verifica que exista la carpeta del proyecto y `requirements.txt`.
-3. Instala Python silenciosamente si no existe `py` (Python Launcher).
-4. Crea el entorno virtual en `-VenvPath` (si no existe).
-5. Instala dependencias (sin compilar GDAL desde fuente).
-6. Instala GDAL desde wheel local en `app/lib` compatible con la versión de Python.
-7. Genera `run_api_gis.bat` para levantar la app con Waitress.
-8. Crea (o actualiza) un servicio de Windows con inicio automático.
-9. Inicia el servicio y deja listo el despliegue.
+## 3. Preparar carpeta y clonar proyecto
 
----
+### Opción recomendada (desde cero)
 
-## 3) Prerrequisitos antes de ejecutar
+```powershell
+New-Item -ItemType Directory -Path "C:\apps\python" -Force
+cd C:\apps\python
+git clone https://github.com/luisamos/api-gis.git
+cd C:\apps\python\api-gis
+```
 
-1. Copiar el proyecto API-GIS en `C:\apps\python\api-gis`.
-2. Confirmar que exista `requirements.txt` en esa ruta.
-3. Abrir **PowerShell como Administrador**.
-4. Validar variables de entorno/configuración de base de datos (si aplica).
+### Si ya tienes el proyecto en otra ruta
 
----
+Si tu repositorio está en otra carpeta (por ejemplo `C:\apps\python\flask\api-gis`), debes usar esa misma ruta en `-InstallRoot`.
 
-## 4) Ejecución paso a paso
+## 4. Ejecutar el instalador
 
-### Paso 1. Abrir PowerShell como administrador
-
-Inicia una consola PowerShell con privilegios de administrador.
-
-### Paso 2. Permitir ejecución de scripts en la sesión actual
+### 4.1 Permitir ejecución de scripts (solo sesión actual)
 
 ```powershell
 Set-ExecutionPolicy Bypass -Scope Process -Force
 ```
 
-### Paso 3. Ingresamos a la carpeta C:\apps\python\api-gis
-
-```powershell
-cd api-gis
-```
-
-### Paso 4. Ejecutar instalador
+### 4.2 Ejecución estándar (ruta recomendada)
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "0.0.0.0" -ListenPort 5000
 ```
 
-### Paso 5s. Verificar creación del servicio
+### 4.3 Ejecución cuando el repo está en otra ruta
 
-1. Ejecuta `services.msc`.
-2. Busca el servicio configurado en `-ServiceName` (ejemplo: `geoCatastro`).
-3. Verifica que esté en **Automático** y **En ejecución**.
+Ejemplo, si trabajas desde `C:\apps\python\flask\api-gis`:
 
----
+```powershell
+powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\flask\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "0.0.0.0" -ListenPort 5000
+```
 
-## 5) Parámetros del script
+## 5. Qué hace el script
 
-- `-InstallRoot`: ruta del código fuente (debe contener `requirements.txt`).
-- `-VenvPath`: ruta del entorno virtual (recomendado: `C:\apps\python\.venv`).
-- `-ServiceName`: nombre interno del servicio Windows.
-- `-PythonVersion`: versión de Python a descargar si no está instalado `py` (recomendado `3.13.2` para wheels actuales de GDAL).
-- `-ListenHost`: host de escucha de Waitress (ejemplo: `0.0.0.0`).
-- `-ListenPort`: puerto de escucha (ejemplo: `5000`).
+1. Valida que PowerShell esté en modo administrador.
+2. Verifica que exista `-InstallRoot`.
+3. Verifica que exista `requirements.txt` dentro de `-InstallRoot`.
+4. Instala Python si no está disponible en `py launcher`.
+5. Crea/recrea el entorno virtual en `-VenvPath`.
+6. Instala dependencias sin compilar GDAL desde fuente.
+7. Instala GDAL desde wheel local en `app/lib`.
+8. Genera `run_api_gis.bat`.
+9. Crea o actualiza el servicio Windows y lo inicia.
 
----
-
-## 6) Validaciones rápidas post-instalación
-
-### Ver estado del servicio por consola
+## 6. Verificaciones post-instalación
 
 ```powershell
 sc.exe query geoCatastro
 ```
 
-### Probar respuesta HTTP local
-
 ```powershell
 curl http://127.0.0.1:5000/
 ```
 
-> Ajusta nombre de servicio, host y puerto según tu configuración.
+También puedes abrir `services.msc` y validar que el servicio esté en **Automático** y **En ejecución**.
 
----
+## 7. Solución de errores frecuentes
 
-## 7) Solución de problemas frecuentes
+### Error: `No existe la carpeta del proyecto: ...`
 
-- **"No se puede sobrescribir la variable Host porque es de solo lectura o constante"**
-  - Ya está corregido en el script actual (usa `ListenAddress` internamente).
+Causa común: `-InstallRoot` no coincide con la ruta real del repositorio.
 
-- **Error al instalar GDAL (`easy_install.install_wrapper_scripts` / build wheel)**
-  - Ocurre cuando `pip` intenta compilar GDAL desde fuente en Windows.
-  - El instalador evita ese flujo e instala GDAL desde wheel local en `app/lib`.
-  - Si falta wheel para tu versión de Python (`cp312`, `cp313`, etc.), agrega el wheel correspondiente en `app/lib` o cambia `-PythonVersion`.
+Verifica:
 
-- **"No existe la carpeta del proyecto" / "No se encontró requirements.txt"**
-  - Verifica `-InstallRoot` y que el proyecto esté completo.
+```powershell
+Test-Path "C:\apps\python\api-gis"
+Test-Path "C:\apps\python\api-gis\requirements.txt"
+```
 
-- **El servicio no inicia**
-  - Revisa si el puerto está ocupado.
-  - Revisa configuración de base de datos/variables de entorno.
-  - Confirma que exista `run_api_gis.bat` en `-InstallRoot`.
+Si estás en otra ruta, corrige el comando y pasa la ruta real en `-InstallRoot`.
 
----
+### Error: `No se encontró requirements.txt en ...`
 
-## 8) Resultado esperado
+- El proyecto está incompleto o no estás apuntando a la raíz del repositorio.
+- Asegúrate de que `requirements.txt` exista en la carpeta indicada.
+
+### Error instalando GDAL
+
+- El script espera un wheel local compatible en `app/lib`.
+- Si cambias versión de Python, agrega el wheel correspondiente (`cp312`, `cp313`, etc.) o usa una versión compatible con wheel disponible.
+
+### El servicio no inicia
+
+- Verifica puerto ocupado (`5000` por defecto).
+- Revisa variables de entorno y conexión a base de datos.
+- Confirma que existe `run_api_gis.bat` en `-InstallRoot`.
+
+## 8. Parámetros del script
+
+- `-InstallRoot`: ruta del repositorio (obligatorio que exista y contenga `requirements.txt`).
+- `-VenvPath`: ruta del entorno virtual.
+- `-ServiceName`: nombre del servicio de Windows.
+- `-PythonVersion`: versión de Python para instalación automática.
+- `-ListenHost`: host de escucha de Waitress.
+- `-ListenPort`: puerto de escucha.
+
+## 9. Resultado esperado
 
 Al finalizar correctamente:
 
-- API-GIS queda desplegado desde `C:\apps\python\api-gis`.
-- El entorno virtual queda en `C:\apps\python\.venv`.
-- El servicio queda registrado en Windows y visible en `services.msc`.
-- La aplicación inicia automáticamente con el sistema.
+- API-GIS instalado desde la ruta indicada en `-InstallRoot`.
+- Entorno virtual creado en `-VenvPath`.
+- Servicio Windows creado/iniciado (`-ServiceName`).
+- API accesible en `http://<host>:<puerto>/`.

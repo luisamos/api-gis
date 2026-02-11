@@ -78,7 +78,8 @@ function Ensure-Project {
     param([string]$Root)
 
     if (-not (Test-Path $Root)) {
-        throw "No existe la carpeta del proyecto: $Root"
+        $currentPath = (Get-Location).Path
+        throw "No existe la carpeta del proyecto: $Root. Ruta actual: $currentPath. Ajusta -InstallRoot para que coincida con la ubicación real del repositorio."
     }
 
     $requirements = Join-Path $Root "requirements.txt"
