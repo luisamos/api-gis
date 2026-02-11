@@ -56,13 +56,19 @@ Inicia una consola PowerShell con privilegios de administrador.
 Set-ExecutionPolicy Bypass -Scope Process -Force
 ```
 
-### Paso 3. Ejecutar instalador (una sola línea para copiar/pegar)
+### Paso 3. Ingresamos a la carpeta C:\apps\python\api-gis
+
+```powershell
+cd api-gis
+```
+
+### Paso 4. Ejecutar instalador
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.12.7" -ListenHost "0.0.0.0" -ListenPort 5000
 ```
 
-### Paso 4. Verificar creación del servicio
+### Paso 5s. Verificar creación del servicio
 
 1. Ejecuta `services.msc`.
 2. Busca el servicio configurado en `-ServiceName` (ejemplo: `geoCatastro`).
