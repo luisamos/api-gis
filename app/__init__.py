@@ -30,12 +30,12 @@ def prepare_directories(base_dir: Path) -> Dict[str, str]:
   }
 
 def configure_logging():
-  log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+  log_level = os.getenv("LOG_LEVEL", "ERROR").upper()
 
   base_dir = Path(__file__).resolve().parent.parent
   logs_dir = Path(os.getenv("LOGS_DIR", base_dir / "logs"))
   logs_dir.mkdir(parents=True, exist_ok=True)
-  log_file = logs_dir / "app.log"
+  log_file = logs_dir / "error.log"
 
   logging.basicConfig(
     level=log_level,
@@ -50,7 +50,7 @@ def configure_logging():
 
   return log_level
 
-def create_app() -> Flask:
+def build_app() -> Flask:
   app = Flask(__name__)
 
   configured_level = configure_logging()
@@ -93,7 +93,7 @@ def create_app() -> Flask:
 
   return app
 
-_cached_app: Optional[Flask] = None
+cached_app: Optional[Flask] = None
 
 def create_app(*args, **kwargs) -> Flask:
   """Create the Flask application.
@@ -101,12 +101,12 @@ def create_app(*args, **kwargs) -> Flask:
   Also supports being used as a direct WSGI callable for servers that point
   to ``app:create_app`` instead of ``wsgi:app``.
   """
-  global _cached_app
+  global cached_app
 
-  if _cached_app is None:
-    _cached_app = _build_app()
+  if cached_app is None:
+    cached_app = build_app()
 
   if len(args) >= 2 and isinstance(args[0], dict) and callable(args[1]):
-    return _cached_app.wsgi_app(*args, **kwargs)
+    return cached_app.wsgi_app(*args, **kwargs)
 
-  return _cached_app
+  return cached_app
