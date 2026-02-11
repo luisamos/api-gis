@@ -53,14 +53,6 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "0.0.0.0" -ListenPort 5000
 ```
 
-### 4.3 Ejecución cuando el repo está en otra ruta
-
-Ejemplo, si trabajas desde `C:\apps\python\flask\api-gis`:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\flask\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "0.0.0.0" -ListenPort 5000
-```
-
 ## 5. Qué hace el script
 
 1. Valida que PowerShell esté en modo administrador.

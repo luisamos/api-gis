@@ -451,7 +451,7 @@ geodata_bp = Blueprint("geodata", __name__, url_prefix="/")
 
 @geodata_bp.route("/")
 def inicio():
-  return "🟢 API - GIS - MDW 2025 - 03/02/2026"
+  return "🟢 API - GIS (geoCatastro) - 11/02/2026"
 
 def validar_token():
   try:

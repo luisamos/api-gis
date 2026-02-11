@@ -9,7 +9,7 @@ from typing import Dict
 from flask import Flask
 from flask_cors import CORS
 
-from .config import DB_URL, ID_UBIGEO, IS_DEV
+from .config import DB_URL, ID_UBIGEO, IS_DEV, DEV_FRONTEND_ORIGIN
 from .extensions import db, jwt, migrate
 from .routes import register_routes
 
@@ -83,7 +83,7 @@ def create_app() -> Flask:
 
   register_routes(app)
   if(IS_DEV):
-    CORS(app, resources={r"/*": {"origins": "http://127.0.0.2:5173"}}, supports_credentials=True)
+    CORS(app, resources={r"/*": {"origins": DEV_FRONTEND_ORIGIN}}, supports_credentials=True)
   else:
     CORS(app)
 
