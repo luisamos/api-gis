@@ -18,16 +18,9 @@ function Require-Admin {
     }
 }
 
-function Ensure-Python {
+function Install-PythonRuntime {
     param([string]$Version)
 
-    $python = Get-Command py -ErrorAction SilentlyContinue
-    if ($python) {
-        Write-Host "Python launcher detectado. Se omite instalación de Python."
-        return
-    }
-
-    $majorMinor = ($Version.Split('.')[0..1] -join '.')
     $installerName = "python-$Version-amd64.exe"
     $downloadUrl = "https://www.python.org/ftp/python/$Version/$installerName"
     $tmpInstaller = Join-Path $env:TEMP $installerName
@@ -39,13 +32,33 @@ function Ensure-Python {
     Start-Process -FilePath $tmpInstaller -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0" -Wait
 
     Remove-Item $tmpInstaller -Force
-
-    $python = Get-Command py -ErrorAction SilentlyContinue
-    if (-not $python) {
-        throw "No se pudo instalar Python automáticamente."
     }
 
-    Write-Host "Python instalado correctamente."
+function Ensure-Python {
+    param([string]$Version)
+
+    $python = Get-Command py -ErrorAction SilentlyContinue
+    $majorMinor = ($Version.Split('.')[0..1] -join '.')
+    
+    if (-not $python) {
+        Install-PythonRuntime -Version $Version
+        $python = Get-Command py -ErrorAction SilentlyContinue
+        if (-not $python) {
+            throw "No se pudo instalar Python automáticamente."
+        }
+    }
+
+    & py -$majorMinor -c "import sys" *> $null
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Python launcher detectado, pero falta Python $majorMinor. Se instalará Python $Version."
+        Install-PythonRuntime -Version $Version
+        & py -$majorMinor -c "import sys" *> $null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Se instaló Python $Version, pero py no detecta la versión $majorMinor. Ejecuta 'py -0p' para revisar instalaciones y vuelve a intentar."
+        }
+    }
+
+    Write-Host "Python $majorMinor disponible en py launcher."
 }
 
 function Ensure-Project {
@@ -68,18 +81,27 @@ function Install-Dependencies {
         [string]$PythonVersion
     )
 
-    if (-not (Test-Path $VirtualEnvPath)) {
+    $pythonExe = Join-Path $VirtualEnvPath "Scripts\python.exe"
+    if (-not (Test-Path $pythonExe)) {
         $venvParent = Split-Path -Path $VirtualEnvPath -Parent
         if (-not (Test-Path $venvParent)) {
             New-Item -ItemType Directory -Path $venvParent -Force | Out-Null
         }
 
+        if (Test-Path $VirtualEnvPath) {
+            Write-Host "Entorno virtual incompleto detectado en $VirtualEnvPath. Se recreará."
+            Remove-Item -Path $VirtualEnvPath -Recurse -Force
+        }
+
         Write-Host "Creando entorno virtual en $VirtualEnvPath"
         $majorMinor = ($PythonVersion.Split('.')[0..1] -join '.')
         & py -$majorMinor -m venv $VirtualEnvPath
+
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $pythonExe)) {
+            throw "No se pudo crear el entorno virtual con Python $majorMinor en '$VirtualEnvPath'. Verifica que 'py -0p' muestre una instalación válida para $majorMinor."
+        }
     }
 
-    $pythonExe = Join-Path $VirtualEnvPath "Scripts\python.exe"
     $requirementsPath = Join-Path $Root "requirements.txt"
     $tempRequirements = Join-Path $env:TEMP "requirements_api_gis_nogdal.txt"
     $wheelDir = Join-Path $Root "app\lib"
