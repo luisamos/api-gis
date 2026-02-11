@@ -190,10 +190,55 @@ cd /d "$Root"
     return $launcherPath
 }
 
+function Ensure-Nssm {
+    param(
+        [string]$Root
+    )
+
+    $toolsDir = Join-Path $Root "tools"
+    $nssmPath = Join-Path $toolsDir "nssm.exe"
+    if (Test-Path $nssmPath) {
+        return $nssmPath
+    }
+
+    New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
+
+    $zipUrl = "https://nssm.cc/release/nssm-2.24.zip"
+    $zipPath = Join-Path $env:TEMP "nssm-2.24.zip"
+    $extractDir = Join-Path $env:TEMP "nssm-2.24"
+
+    Write-Host "Descargando NSSM desde $zipUrl"
+    Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
+
+    if (Test-Path $extractDir) {
+        Remove-Item -Path $extractDir -Recurse -Force
+    }
+
+    Expand-Archive -Path $zipPath -DestinationPath $extractDir -Force
+
+    $archFolder = if ([Environment]::Is64BitOperatingSystem) { "win64" } else { "win32" }
+    $sourceExe = Join-Path $extractDir "nssm-2.24\$archFolder\nssm.exe"
+
+    if (-not (Test-Path $sourceExe)) {
+        throw "No se encontró nssm.exe en el paquete descargado."
+    }
+
+    Copy-Item -Path $sourceExe -Destination $nssmPath -Force
+
+    Remove-Item -Path $zipPath -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $extractDir -Recurse -Force -ErrorAction SilentlyContinue
+
+    return $nssmPath
+}
+
 function Create-OrUpdate-Service {
     param(
         [string]$Name,
-        [string]$LauncherPath
+        [string]$LauncherPath,
+        [string]$Root,
+        [string]$VirtualEnvPath,
+        [string]$ListenAddress,
+        [int]$Port
     )
 
     if (-not (Test-Path $LauncherPath)) {
@@ -201,37 +246,66 @@ function Create-OrUpdate-Service {
     }
 
     $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
-    $binPath = "cmd.exe /c `"$LauncherPath`""
+    $pythonExe = Join-Path $VirtualEnvPath "Scripts\python.exe"
+    if (-not (Test-Path $pythonExe)) {
+        throw "No se encontró python.exe del entorno virtual en: $pythonExe"
+    }
+
+    $nssmExe = Ensure-Nssm -Root $Root
+    $arguments = "-m waitress --listen=$ListenAddress`:$Port app:create_app"
+    $stdoutLog = Join-Path $Root "logs\api-gis-service.log"
+    $stderrLog = Join-Path $Root "logs\api-gis-service-error.log"
+
+    New-Item -ItemType Directory -Path (Split-Path $stdoutLog -Parent) -Force | Out-Null
 
     if ($service) {
         Write-Host "El servicio $Name ya existe. Se actualizará configuración."
-        $null = & sc.exe stop $Name
-        $null = & sc.exe config $Name start= auto obj= LocalSystem
+        $null = & $nssmExe stop $Name
+        $null = & $nssmExe set $Name Application $pythonExe
         if ($LASTEXITCODE -ne 0) {
-            throw "No se pudo configurar inicio automático para el servicio '$Name'."
+            throw "No se pudo actualizar la aplicación del servicio '$Name'."
         }
 
-        $null = & sc.exe config $Name binPath= $binPath
+        $null = & $nssmExe set $Name AppParameters $arguments
         if ($LASTEXITCODE -ne 0) {
-            throw "No se pudo actualizar binPath para el servicio '$Name'."
+            throw "No se pudieron actualizar los argumentos del servicio '$Name'."
+        }
+
+        $null = & $nssmExe set $Name AppDirectory $Root
+        if ($LASTEXITCODE -ne 0) {
+            throw "No se pudo actualizar el directorio de trabajo del servicio '$Name'."
+        }
+
+        $null = & $nssmExe set $Name Start SERVICE_AUTO_START
+        if ($LASTEXITCODE -ne 0) {
+            throw "No se pudo configurar inicio automático para el servicio '$Name'."
         }
     }
     else {
         Write-Host "Creando servicio de Windows $Name"
-        $null = & sc.exe create $Name binPath= $binPath start= auto obj= LocalSystem DisplayName= "API-GIS Service"
+        $null = & $nssmExe install $Name $pythonExe $arguments
         if ($LASTEXITCODE -ne 0) {
             throw "No se pudo crear el servicio '$Name'."
         }
+
+        $null = & $nssmExe set $Name DisplayName "API-GIS Service"
+        $null = & $nssmExe set $Name Start SERVICE_AUTO_START
     }
+
+    $null = & $nssmExe set $Name AppDirectory $Root
+    $null = & $nssmExe set $Name AppStdout $stdoutLog
+    $null = & $nssmExe set $Name AppStderr $stderrLog
+    $null = & $nssmExe set $Name AppRotateFiles 1
+    $null = & $nssmExe set $Name AppRotateOnline 1
 
     $null = & sc.exe description $Name "Servicio API-GIS (Flask/Waitress)"
     if ($LASTEXITCODE -ne 0) {
         throw "No se pudo actualizar la descripción del servicio '$Name'."
     }
 
-    $null = & sc.exe start $Name
+    $null = & $nssmExe start $Name
     if ($LASTEXITCODE -ne 0) {
-        throw "El servicio '$Name' se creó/configuró, pero no pudo iniciar. Revisa Event Viewer y el archivo run_api_gis.bat."
+        throw "El servicio '$Name' se creó/configuró, pero no pudo iniciar. Revisa Event Viewer, run_api_gis.bat y los logs en $Root\logs."
     }
 
     $queryOutput = & sc.exe query $Name
@@ -247,8 +321,8 @@ Ensure-Project -Root $InstallRoot
 Ensure-Python -Version $PythonVersion
 
 Install-Dependencies -Root $InstallRoot -VirtualEnvPath $VenvPath -PythonVersion $PythonVersion
-$launcher = Write-Launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort
-Create-OrUpdate-Service -Name $ServiceName -LauncherPath $launcher
+$launcher = Write-Launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort␊
+Create-OrUpdate-Service -Name $ServiceName -LauncherPath $launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort
 
 Write-Host "Instalación terminada."
 Write-Host "Verifica el servicio en services.msc con el nombre: $ServiceName"

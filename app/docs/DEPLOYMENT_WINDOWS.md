@@ -63,7 +63,8 @@ powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRo
 6. Instala dependencias sin compilar GDAL desde fuente.
 7. Instala GDAL desde wheel local en `app/lib`.
 8. Genera `run_api_gis.bat`.
-9. Crea o actualiza el servicio Windows y lo inicia.
+9. Descarga NSSM (si no existe) en `tools\nssm.exe`.
+10. Crea o actualiza el servicio Windows usando NSSM y lo inicia.
 
 ## 6. Verificaciones post-instalación
 
@@ -107,6 +108,7 @@ Si estás en otra ruta, corrige el comando y pasa la ruta real en `-InstallRoot`
 - Verifica puerto ocupado (`5000` por defecto).
 - Revisa variables de entorno y conexión a base de datos.
 - Confirma que existe `run_api_gis.bat` en `-InstallRoot`.
+- Revisa logs del servicio en `C:\apps\python\api-gis\logs\api-gis-service.log` y `api-gis-service-error.log`.
 
 ## 8. Parámetros del script
 
