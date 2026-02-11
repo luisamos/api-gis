@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$InstallRoot = "C:\apps\api-gis",
+    [string]$InstallRoot = "C:\apps\python\api-gis",
+    [string]$VenvPath = "C:\apps\python\.venv",
     [string]$ServiceName = "geoCatastro",
     [string]$PythonVersion = "3.12.7",
     [string]$ListenHost = "0.0.0.0",
@@ -63,35 +64,65 @@ function Ensure-Project {
 function Install-Dependencies {
     param(
         [string]$Root,
-        [string]$VenvPath
+        [string]$VirtualEnvPath,
+        [string]$PythonVersion
     )
 
-    if (-not (Test-Path $VenvPath)) {
-        Write-Host "Creando entorno virtual en $VenvPath"
-        & py -3.12 -m venv $VenvPath
+    if (-not (Test-Path $VirtualEnvPath)) {
+        $venvParent = Split-Path -Path $VirtualEnvPath -Parent
+        if (-not (Test-Path $venvParent)) {
+            New-Item -ItemType Directory -Path $venvParent -Force | Out-Null
+        }
+
+        Write-Host "Creando entorno virtual en $VirtualEnvPath"
+        $majorMinor = ($PythonVersion.Split('.')[0..1] -join '.')
+        & py -$majorMinor -m venv $VirtualEnvPath
     }
 
-    $pythonExe = Join-Path $VenvPath "Scripts\python.exe"
+    $pythonExe = Join-Path $VirtualEnvPath "Scripts\python.exe"
+    $requirementsPath = Join-Path $Root "requirements.txt"
+    $tempRequirements = Join-Path $env:TEMP "requirements_api_gis_nogdal.txt"
+    $wheelDir = Join-Path $Root "app\lib"
+    $pyTag = & $pythonExe -c "import sys; print(f'cp{sys.version_info.major}{sys.version_info.minor}')"
+
+    # Evitar instalar GDAL desde requirements para no disparar compilación en Windows.
+    Get-Content $requirementsPath |
+        Where-Object { $_ -notmatch '^\s*gdal\s*==.*$' } |
+        Set-Content -Path $tempRequirements -Encoding ASCII
 
     & $pythonExe -m pip install --upgrade pip
-    & $pythonExe -m pip install -r (Join-Path $Root "requirements.txt")
+    & $pythonExe -m pip install --upgrade "setuptools<70" wheel
+    & $pythonExe -m pip install -r $tempRequirements
+
+    if (Test-Path $wheelDir) {
+        $gdalWheel = Get-ChildItem -Path $wheelDir -Filter "gdal-*-$pyTag-*-win_amd64.whl" -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($gdalWheel) {
+            Write-Host "Instalando GDAL desde wheel local: $($gdalWheel.Name)"
+            & $pythonExe -m pip install --no-index --find-links $wheelDir gdal
+            Remove-Item $tempRequirements -Force -ErrorAction SilentlyContinue
+            return
+        }
+    }
+
+    Remove-Item $tempRequirements -Force -ErrorAction SilentlyContinue
+    throw "No se encontró wheel local de GDAL para $pyTag en '$wheelDir'. Agrega un archivo gdal-*-$pyTag-*-win_amd64.whl o ajusta PythonVersion para usar una versión con wheel disponible."
 }
 
 function Write-Launcher {
     param(
         [string]$Root,
-        [string]$VenvPath,
-        [string]$Host,
+        [string]$VirtualEnvPath,
+        [string]$ListenAddress,
         [int]$Port
     )
 
     $launcherPath = Join-Path $Root "run_api_gis.bat"
-    $pythonExe = Join-Path $VenvPath "Scripts\python.exe"
+    $pythonExe = Join-Path $VirtualEnvPath "Scripts\python.exe"
 
     $content = @"
 @echo off
 cd /d "$Root"
-"$pythonExe" -m waitress --listen=$Host`:$Port app:create_app
+"$pythonExe" -m waitress --listen=$ListenAddress`:$Port app:create_app
 "@
 
     Set-Content -Path $launcherPath -Value $content -Encoding ASCII
@@ -125,9 +156,8 @@ Require-Admin
 Ensure-Project -Root $InstallRoot
 Ensure-Python -Version $PythonVersion
 
-$venvPath = Join-Path $InstallRoot ".venv"
-Install-Dependencies -Root $InstallRoot -VenvPath $venvPath
-$launcher = Write-Launcher -Root $InstallRoot -VenvPath $venvPath -Host $ListenHost -Port $ListenPort
+Install-Dependencies -Root $InstallRoot -VirtualEnvPath $VenvPath -PythonVersion $PythonVersion
+$launcher = Write-Launcher -Root $InstallRoot -VirtualEnvPath $VenvPath -ListenAddress $ListenHost -Port $ListenPort
 Create-OrUpdate-Service -Name $ServiceName -LauncherPath $launcher
 
 Write-Host "Instalación terminada."
