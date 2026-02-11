@@ -3,7 +3,7 @@ param(
     [string]$InstallRoot = "C:\apps\python\api-gis",
     [string]$VenvPath = "C:\apps\python\.venv",
     [string]$ServiceName = "geoCatastro",
-    [string]$PythonVersion = "3.12.7",
+    [string]$PythonVersion = "3.13.2",
     [string]$ListenHost = "0.0.0.0",
     [int]$ListenPort = 5000
 )

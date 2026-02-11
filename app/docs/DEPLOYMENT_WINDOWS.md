@@ -65,7 +65,7 @@ cd api-gis
 ### Paso 4. Ejecutar instalador
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.12.7" -ListenHost "0.0.0.0" -ListenPort 5000
+powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "0.0.0.0" -ListenPort 5000
 ```
 
 ### Paso 5s. Verificar creación del servicio
@@ -81,7 +81,7 @@ powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRo
 - `-InstallRoot`: ruta del código fuente (debe contener `requirements.txt`).
 - `-VenvPath`: ruta del entorno virtual (recomendado: `C:\apps\python\.venv`).
 - `-ServiceName`: nombre interno del servicio Windows.
-- `-PythonVersion`: versión de Python a descargar si no está instalado `py`.
+- `-PythonVersion`: versión de Python a descargar si no está instalado `py` (recomendado `3.13.2` para wheels actuales de GDAL).
 - `-ListenHost`: host de escucha de Waitress (ejemplo: `0.0.0.0`).
 - `-ListenPort`: puerto de escucha (ejemplo: `5000`).
 
