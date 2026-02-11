@@ -196,21 +196,50 @@ function Create-OrUpdate-Service {
         [string]$LauncherPath
     )
 
+    if (-not (Test-Path $LauncherPath)) {
+        throw "No existe el launcher para el servicio: $LauncherPath"
+    }
+
     $service = Get-Service -Name $Name -ErrorAction SilentlyContinue
+    $binPath = "cmd.exe /c `"$LauncherPath`""
 
     if ($service) {
         Write-Host "El servicio $Name ya existe. Se actualizará configuración."
-        sc.exe stop $Name | Out-Null
-        sc.exe config $Name start= auto obj= LocalSystem | Out-Null
-        sc.exe config $Name binPath= "cmd.exe /c \"$LauncherPath\"" | Out-Null
+        $null = & sc.exe stop $Name
+        $null = & sc.exe config $Name start= auto obj= LocalSystem
+        if ($LASTEXITCODE -ne 0) {
+            throw "No se pudo configurar inicio automático para el servicio '$Name'."
+        }
+
+        $null = & sc.exe config $Name binPath= $binPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "No se pudo actualizar binPath para el servicio '$Name'."
+        }
     }
     else {
         Write-Host "Creando servicio de Windows $Name"
-        sc.exe create $Name binPath= "cmd.exe /c \"$LauncherPath\"" start= auto obj= LocalSystem DisplayName= "API-GIS Service" | Out-Null
+        $null = & sc.exe create $Name binPath= $binPath start= auto obj= LocalSystem DisplayName= "API-GIS Service"
+        if ($LASTEXITCODE -ne 0) {
+            throw "No se pudo crear el servicio '$Name'."
+        }
     }
 
-    sc.exe description $Name "Servicio API-GIS (Flask/Waitress)" | Out-Null
-    sc.exe start $Name | Out-Null
+    $null = & sc.exe description $Name "Servicio API-GIS (Flask/Waitress)"
+    if ($LASTEXITCODE -ne 0) {
+        throw "No se pudo actualizar la descripción del servicio '$Name'."
+    }
+
+    $null = & sc.exe start $Name
+    if ($LASTEXITCODE -ne 0) {
+        throw "El servicio '$Name' se creó/configuró, pero no pudo iniciar. Revisa Event Viewer y el archivo run_api_gis.bat."
+    }
+
+    $queryOutput = & sc.exe query $Name
+    if ($LASTEXITCODE -ne 0) {
+        throw "Se intentó crear/configurar el servicio '$Name', pero no aparece al consultar con sc.exe query."
+    }
+
+    Write-Host ($queryOutput | Out-String)
 }
 
 Require-Admin
