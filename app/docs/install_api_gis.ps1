@@ -206,35 +206,15 @@ function Ensure-Nssm {
 
     New-Item -ItemType Directory -Path $toolsDir -Force | Out-Null
 
-    $zipUrls = @(
-        "https://nssm.cc/release/nssm-2.24.zip",
-        "https://github.com/kirillkovalenko/nssm/releases/download/2.24-101-g897c7ad/nssm-2.24-101-g897c7ad.zip"
-    )
+    $localZipPath = Join-Path $Root "app\lib\nssm-2.24.zip"
     $zipPath = Join-Path $env:TEMP "nssm-2.24.zip"
     $extractDir = Join-Path $env:TEMP "nssm-2.24"
-    $downloaded = $false
-    $downloadErrors = @()
-
-    # Forzar protocolos modernos para evitar errores de handshake en entornos corporativos.
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls13
-
-    foreach ($zipUrl in $zipUrls) {
-        Write-Host "Descargando NSSM desde $zipUrl"
-        try {
-            Invoke-WebRequest -Uri $zipUrl -OutFile $zipPath
-            $downloaded = $true
-            break
-        }
-        catch {
-            $message = $_.Exception.Message
-            $downloadErrors += "- ${zipUrl}: $message"
-            Write-Warning "No se pudo descargar NSSM desde $zipUrl. Se intentará otra fuente si está disponible."
-        }
+    if (-not (Test-Path $localZipPath)) {
+        throw "No se encontró NSSM local en '$localZipPath'. Copia 'nssm-2.24.zip' en app/lib antes de ejecutar la instalación."
     }
 
-    if (-not $downloaded) {
-        throw "No se pudo descargar NSSM desde ninguna fuente disponible.`n$($downloadErrors -join "`n")"
-    }
+    Write-Host "Usando NSSM local desde $localZipPath"
+    Copy-Item -Path $localZipPath -Destination $zipPath -Force
 
     if (Test-Path $extractDir) {
         Remove-Item -Path $extractDir -Recurse -Force
