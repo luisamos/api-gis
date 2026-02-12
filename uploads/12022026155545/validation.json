@@ -1,0 +1,9 @@
+{
+  "validado": true,
+  "fields": {
+    "cod_sector": "COD_SECTOR",
+    "cod_mzna": "COD_MZNA"
+  },
+  "tabla": "Manzana",
+  "fechaValidacion": "2026-02-12T20:55:45.611085"
+}
