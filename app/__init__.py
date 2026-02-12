@@ -9,7 +9,15 @@ from typing import Dict, Optional
 from flask import Flask
 from flask_cors import CORS
 
-from .config import DB_URL, ID_UBIGEO, IS_DEV, DEV_FRONTEND_ORIGIN
+from .config import (
+  DB_URL,
+  ID_UBIGEO,
+  IS_DEV,
+  DEV_FRONTEND_ORIGIN,
+  JWT_SECRET_KEY,
+  COOKIE_SECURE,
+  COOKIE_SAMESITE,
+)
 from .extensions import db, jwt, migrate
 from .routes import register_routes
 
@@ -65,14 +73,14 @@ def build_app() -> Flask:
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
     JSON_SORT_KEYS=False,
     ID_UBIGEO=ID_UBIGEO,
-    JWT_COOKIE_SECURE=not IS_DEV,
+    JWT_COOKIE_SECURE=COOKIE_SECURE,
     JWT_TOKEN_LOCATION=["cookies"],
     JWT_ACCESS_COOKIE_NAME="access_geotoken",
     JWT_ACCESS_TOKEN_EXPIRES=timedelta(minutes=30),
     JWT_REFRESH_TOKEN_EXPIRES=timedelta(days=1),
     JWT_COOKIE_CSRF_PROTECT=True,
-    JWT_COOKIE_SAMESITE="Lax",
-    JWT_SECRET_KEY="0vShg$9xQfU4t1cN2bZ8mP6wLrE7yK5jH3dS1aX9nQ4tG6pB8zV2",
+    JWT_COOKIE_SAMESITE=COOKIE_SAMESITE,
+    JWT_SECRET_KEY=JWT_SECRET_KEY or "dev-insecure-key-change-me",
     JWT_COOKIE_HTTPONLY=True,
     **directories,
   )

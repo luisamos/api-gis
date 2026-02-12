@@ -13,11 +13,11 @@ FROM geo.tg_lote a
 LEFT JOIN (
 	SELECT DISTINCT
 	b.id_lote,
-	b.id_ficha	
-	FROM catastro.tf_fichas b		
+	b.id_ficha
+	FROM catastro.tf_fichas b
 	WHERE b.tipo_ficha = '01'
 	GROUP BY b.id_lote,
-	b.id_ficha	
+	b.id_ficha
 	ORDER BY 1,2
 	) f
 ON a.id_lote = f.id_lote

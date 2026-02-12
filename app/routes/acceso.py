@@ -7,11 +7,18 @@ from flask_jwt_extended import create_access_token, get_csrf_token, jwt_required
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.extensions import db
-from app.config import IS_DEV
+from app.config import IS_DEV, COOKIE_PARTITIONED
 from app.models.rol import Rol, RolPermiso
 from app.models.usuario import Usuario
 
 acceso_bp = Blueprint("acceso", __name__, url_prefix="/token")
+
+def cookie_kwargs() -> dict:
+  return {
+    "secure": current_app.config.get("JWT_COOKIE_SECURE", True),
+    "samesite": current_app.config.get("JWT_COOKIE_SAMESITE", "Lax"),
+    "partitioned": COOKIE_PARTITIONED,
+  }
 
 @acceso_bp.route("/acceso", methods=["POST"], strict_slashes=False)
 def acceso_visor():
@@ -75,12 +82,18 @@ def acceso_visor():
     )
     csrf_token = get_csrf_token(access_token)
     resp = jsonify({"estado": True, "datos": {"nombres_apellidos": nombres_apellidos, "correo_electronico": usuario_db.email}})
+    cookie_config = cookie_kwargs()
     if IS_DEV:
-      resp.set_cookie("access_geotoken", access_token, httponly=True, secure=True, samesite="None", partitioned=True)
-      resp.set_cookie("csrf_access_token", csrf_token, httponly=False, secure=True, samesite="None", partitioned=True)
-    else:
-      resp.set_cookie("access_geotoken", access_token, httponly=True, secure=True, samesite="Lax")
-      resp.set_cookie("csrf_access_token", csrf_token, httponly=False, secure=True, samesite="Lax")
+      current_app.logger.debug(
+        "🟢 Cookie config login: secure=%s samesite=%s partitioned=%s origin=%s",
+        cookie_config["secure"],
+        cookie_config["samesite"],
+        cookie_config["partitioned"],
+        request.headers.get("Origin"),
+      )
+
+    resp.set_cookie("access_geotoken", access_token, httponly=True, **cookie_config)
+    resp.set_cookie("csrf_access_token", csrf_token, httponly=False, **cookie_config)
     return resp, 200
   except SQLAlchemyError as exc:
     current_app.logger.exception("🔴 Error de base de datos: %s", exc)
@@ -111,12 +124,9 @@ def verificar_expiracion():
 @acceso_bp.route("/salir", methods=["POST"], strict_slashes=False)
 def salir():
   resp = jsonify({"estado": True, "mensaje": "Sesión cerrada"})
-  if IS_DEV:
-    resp.delete_cookie("access_geotoken", secure=False, samesite="None", partitioned=True)
-    resp.delete_cookie("csrf_access_token", secure=False, samesite="None", partitioned=True)
-  else:
-    resp.delete_cookie("access_geotoken", secure=True, samesite="Lax")
-    resp.delete_cookie("csrf_access_token", secure=True, samesite="Lax")
+  cookie_config = cookie_kwargs()
+  resp.delete_cookie("access_geotoken", **cookie_config)
+  resp.delete_cookie("csrf_access_token", **cookie_config)
   return resp, 200
 
 def password_matches(stored_password: str, plain_password: str) -> bool:
