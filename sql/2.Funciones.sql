@@ -1,409 +1,555 @@
 --
 -- FECHA DE CREACIÓN 	 : 22/10/2024
--- FECHA DE MODIFICACIÓN : 10/02/2026
+-- FECHA DE MODIFICACIÓN : 23/02/2026
 --
 
--- 01. Cuenta con y/o sin ficha catastral
---DROP VIEW IF EXISTS geo.v_lote;
-CREATE OR REPLACE VIEW geo.v_lote AS
-SELECT DISTINCT
-a.gid,
-b.id_ficha,
-c.imagen_plano AS fotografia,
-b.id_lote,
-a.cod_sector,
-a.cod_mzna,
-a.cod_sector || a.cod_mzna || a.cod_lote AS lote_id,
-a.cod_lote,
-CASE
-	WHEN b.id_lote IS NULL AND c.imagen_plano IS NULL THEN 0
-	WHEN b.id_lote IS NULL AND c.imagen_plano IS NOT NULL THEN 1
-	WHEN b.id_lote IS NOT NULL AND c.imagen_plano IS NULL THEN 2
-	ELSE 3
-END AS existe,
-CASE
-	WHEN b.id_lote IS NULL THEN 2
-	ELSE 1
-END AS existe_ficha,
-CASE
-	WHEN e.tipo_doc = '0'  THEN 'RUC'
-	WHEN e.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-e.nume_doc,
-CASE
-	WHEN e.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN e.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS tipo_persona,
-CASE
-	WHEN e.tipo_persona = '1' THEN e.ape_paterno || ' ' || e.ape_materno || ' ' || e.nombres
-	WHEN e.tipo_persona = '2' THEN e.razon_social
-END AS ciudadano_razon_social,
-round(a.area_grafi :: decimal,2) AS area_grafi,
-round(a.peri_grafi :: decimal,2) AS peri_grafi,
-geom
+-- 01. Lotes con y sin ficha catastral
+DROP VIEW IF EXISTS geo.v_catastro_lote;
+CREATE OR REPLACE VIEW geo.v_catastro_lote AS
+WITH construcciones_agg AS (
+    SELECT
+        id_ficha,
+        SUM(area_declarada) AS area_construida
+    FROM catastro.tf_construcciones
+    GROUP BY id_ficha
+),
+fichas_lote AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha,
+        c.imagen_lote,
+        ca.area_construida
+    FROM catastro.tf_fichas b
+    LEFT JOIN catastro.tf_fichas_individuales c ON b.id_ficha = c.id_ficha
+    LEFT JOIN construcciones_agg ca            ON b.id_ficha = ca.id_ficha
+    ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
+)
+SELECT
+    a.gid,
+    fl.imagen_lote                                          AS foto_lote,
+    a.cuc,
+    a.cod_sector,
+    a.cod_mzna                                              AS cod_manzana,
+    a.cod_lote,
+    ROUND(ST_Area(a.geom)::decimal, 2)                      AS area_grafica,
+    COALESCE(ROUND(fl.area_construida::decimal, 2), 0)      AS area_construida,
+    CASE
+        WHEN fl.id_lote IS NOT NULL THEN 'SI'
+        ELSE 'NO'
+    END                                                     AS ficha
 FROM geo.tg_lote a
-LEFT JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-LEFT JOIN catastro.tf_fichas_individuales c ON b.id_ficha = c.id_ficha
-LEFT JOIN catastro.tf_titulares d ON b.id_ficha = d.id_ficha
-LEFT JOIN catastro.tf_personas e ON d.id_persona = e.id_persona
---WHERE (d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres) != 'NNN NNN NNN'
-GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15
-ORDER BY existe_ficha;
+LEFT JOIN fichas_lote fl ON a.id_lote = fl.id_lote
+ORDER BY a.cod_sector, a.cod_mzna, a.cod_lote;
 
-SELECT * FROM catastro.tf_fichas;
 
---SELECT * FROM geo.v_lote WHERE fotografia IS NOT NULL;
---SELECT * FROM geo.v_lote LIMIT 1;
-
---SELECT count(*) FROM geo.tg_lote;
-
---SELECT * FROM catastro.v_lote LIMIT 2;
-
---SELECT * FROM catastro.v_lote WHERE nume_doc='00004431';
-
---SELECT * FROM catastro.personas WHERE nume_doc='23823831'
+SELECT * FROM geo.v_catastro_lote;
 
 -- 02. Servicios básicos
---DROP VIEW IF EXISTS geo.v_servicios_basicos;
+DROP VIEW IF EXISTS geo.v_servicio_basico;
 CREATE OR REPLACE VIEW geo.v_servicio_basico AS
+WITH ficha_principal AS (    
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
+),
+titular_principal AS (    
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-e.luz AS codi_luz,
-e.agua AS codi_agua,
-e.telefono AS codi_telefono,
-e.desague AS codi_desague,
-e.gas AS codi_gas,
-e.internet AS codi_internet,
-e.tvcable AS codi_tvcable,
-CASE
-	WHEN e.luz = '1' THEN 'SI'
-	WHEN e.luz = '2' THEN 'NO'
-END AS luz,
-CASE
-	WHEN e.agua = '1' THEN 'SI'
-	WHEN e.agua = '2' THEN 'NO'
-END AS agua,
-CASE
-	WHEN e.telefono = '1' THEN 'SI'
-	WHEN e.telefono = '2' THEN 'NO'
-END AS telefono,
-CASE
-	WHEN e.desague = '1' THEN 'SI'
-	WHEN e.desague = '2' THEN 'NO'
-END AS desague,
-CASE
-	WHEN e.gas = '1' THEN 'SI'
-	WHEN e.gas = '2' THEN 'NO'
-END AS gas,
-CASE
-	WHEN e.internet = '1' THEN 'SI'
-	WHEN e.internet = '2' THEN 'NO'
-END AS internet,
-CASE
-	WHEN e.tvcable = '1' THEN 'SI'
-	WHEN e.tvcable = '2' THEN 'NO'
-END AS tvcable,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    e.luz                                                   AS codi_luz,
+    e.agua                                                  AS codi_agua,
+    e.telefono                                              AS codi_telefono,
+    e.desague                                               AS codi_desague,
+    e.gas                                                   AS codi_gas,
+    e.internet                                              AS codi_internet,
+    e.tvcable                                               AS codi_tvcable,
+    CASE WHEN e.luz      = '1' THEN 'SI' WHEN e.luz      = '2' THEN 'NO' END AS luz,
+    CASE WHEN e.agua     = '1' THEN 'SI' WHEN e.agua     = '2' THEN 'NO' END AS agua,
+    CASE WHEN e.telefono = '1' THEN 'SI' WHEN e.telefono = '2' THEN 'NO' END AS telefono,
+    CASE WHEN e.desague  = '1' THEN 'SI' WHEN e.desague  = '2' THEN 'NO' END AS desague,
+    CASE WHEN e.gas      = '1' THEN 'SI' WHEN e.gas      = '2' THEN 'NO' END AS gas,
+    CASE WHEN e.internet = '1' THEN 'SI' WHEN e.internet = '2' THEN 'NO' END AS internet,
+    CASE WHEN e.tvcable  = '1' THEN 'SI' WHEN e.tvcable  = '2' THEN 'NO' END AS tvcable,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-JOIN catastro.tf_servicios_basicos e ON b.id_ficha = e.id_ficha
-GROUP BY a.gid, b.id_lote, d.tipo_doc, d.nume_doc, d.tipo_persona, d.ape_paterno,  d.ape_materno, d.nombres, d.razon_social, e.luz, e.agua, e.telefono, e.desague, e.gas, e.internet, e.tvcable, a.geom
+LEFT JOIN ficha_principal fp           ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp         ON fp.id_ficha = tp.id_ficha
+LEFT JOIN catastro.tf_servicios_basicos e ON fp.id_ficha = e.id_ficha
 ORDER BY a.gid;
+
+SELECT * FROM geo.v_servicio_basico;
 
 -- 03. Clasificación del Predio
---DROP VIEW IF EXISTS geo.v_clasificacion_predio;
+DROP VIEW IF EXISTS geo.v_clasificacion_predio;
 CREATE OR REPLACE VIEW geo.v_clasificacion_predio AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-substring(e.clasificacion,1,2) AS codi_clasi,
-CASE
-	WHEN substring(e.clasificacion,1,2) = '01' THEN 'CASA HABITACITACIÓN'
-	WHEN substring(e.clasificacion,1,2) = '02' THEN 'TIENDA - DEPÓSITO - ALMACEN'
-	WHEN substring(e.clasificacion,1,2) = '03' THEN 'PREDIO EN EDIFICIO'
-	WHEN substring(e.clasificacion,1,2) = '04' THEN 'OTROS'
-	WHEN substring(e.clasificacion,1,2) = '05' THEN 'TERRENO SIN CONSTRUIR'
-END AS clasificacion,
-e.area_titulo, e.area_verificada, e.nume_habitantes, e.observaciones,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    substring(e.clasificacion, 1, 2)                        AS codi_clasi,
+    CASE
+        WHEN substring(e.clasificacion, 1, 2) = '01' THEN 'CASA HABITACIÓN'
+        WHEN substring(e.clasificacion, 1, 2) = '02' THEN 'TIENDA - DEPÓSITO - ALMACÉN'
+        WHEN substring(e.clasificacion, 1, 2) = '03' THEN 'PREDIO EN EDIFICIO'
+        WHEN substring(e.clasificacion, 1, 2) = '04' THEN 'OTROS'
+        WHEN substring(e.clasificacion, 1, 2) = '05' THEN 'TERRENO SIN CONSTRUIR'
+    END                                                     AS clasificacion,
+    e.area_titulo,
+    e.area_verificada,
+    e.nume_habitantes,
+    e.observaciones,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-JOIN catastro.tf_fichas_individuales e ON b.id_ficha = e.id_ficha
-GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13
+LEFT JOIN ficha_principal fp                ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp              ON fp.id_ficha = tp.id_ficha
+LEFT JOIN catastro.tf_fichas_individuales e ON fp.id_ficha = e.id_ficha
 ORDER BY a.gid;
 
---SELECT * FROM geo.v_clasificacion_predio;
+SELECT * FROM geo.v_clasificacion_predio;
 
 -- 04. Personas Natural / Persona Jurídica
---DROP VIEW IF EXISTS geo.v_tipo_persona;
+DROP VIEW IF EXISTS geo.v_tipo_persona;
 CREATE OR REPLACE VIEW geo.v_tipo_persona AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona IS NULL THEN '0'
-	ELSE d.tipo_persona
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    COALESCE(tp.tipo_persona, '0')                          AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-GROUP BY 1,2,3,4,5,6,7,8
+LEFT JOIN ficha_principal fp   ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp ON fp.id_ficha = tp.id_ficha
 ORDER BY a.gid;
 
 -- 05. Tipo de uso
---DROP VIEW IF EXISTS geo.v_tipo_uso;
+DROP VIEW IF EXISTS geo.v_tipo_uso;
 CREATE OR REPLACE VIEW geo.v_tipo_uso AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    WHERE b.tipo_ficha = '01'
+    ORDER BY b.id_lote, b.id_ficha
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona IS NULL THEN '0'
-	ELSE d.tipo_persona
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-f.codi_uso,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    COALESCE(tp.tipo_persona, '0')                          AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    u.codi_uso,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-JOIN catastro.tf_fichas_individuales e ON e.id_ficha = b.id_ficha
-JOIN catastro.tf_usos f ON f.codi_uso = e.codi_uso
-WHERE b.tipo_ficha='01'
-GROUP BY 1,2,3,4,5,6,7,8,9
+LEFT JOIN ficha_principal fp                ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp              ON fp.id_ficha = tp.id_ficha
+LEFT JOIN catastro.tf_fichas_individuales e ON fp.id_ficha = e.id_ficha
+LEFT JOIN catastro.tf_usos u               ON u.codi_uso = e.codi_uso
 ORDER BY a.gid;
 
 -- 06. Material de construcción
---DROP VIEW IF EXISTS geo.v_material_construccion;
+DROP VIEW IF EXISTS geo.v_material_construccion;
 CREATE OR REPLACE VIEW geo.v_material_construccion AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    WHERE b.tipo_ficha = '01'
+    ORDER BY b.id_lote, b.id_ficha
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+),
+construccion_principal AS (
+    SELECT DISTINCT ON (id_ficha)
+        id_ficha,
+        mep
+    FROM catastro.tf_construcciones
+    ORDER BY id_ficha, codi_construccion
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona IS NULL THEN '0'
-	ELSE d.tipo_persona
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-f.mep,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    COALESCE(tp.tipo_persona, '0')                          AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    cp.mep,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-JOIN catastro.tf_fichas_individuales e ON e.id_ficha = b.id_ficha
-JOIN catastro.tf_construcciones f ON f.id_ficha = e.id_ficha
-WHERE b.tipo_ficha='01'
-GROUP BY 1,2,3,4,5,6,7,8,9
+LEFT JOIN ficha_principal fp         ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp       ON fp.id_ficha = tp.id_ficha
+LEFT JOIN construccion_principal cp  ON fp.id_ficha = cp.id_ficha
 ORDER BY a.gid;
 
 -- 07. Estado de conservación
---DROP VIEW IF EXISTS geo.v_estado_conservacion;
+DROP VIEW IF EXISTS geo.v_estado_conservacion;
 CREATE OR REPLACE VIEW geo.v_estado_conservacion AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    WHERE b.tipo_ficha = '01'
+    ORDER BY b.id_lote, b.id_ficha
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+),
+construccion_principal AS (
+    SELECT DISTINCT ON (id_ficha)
+        id_ficha,
+        ecs
+    FROM catastro.tf_construcciones
+    ORDER BY id_ficha, codi_construccion
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona IS NULL THEN '0'
-	ELSE d.tipo_persona
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-f.ecs,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    COALESCE(tp.tipo_persona, '0')                          AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    cp.ecs,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-JOIN catastro.tf_fichas_individuales e ON e.id_ficha = b.id_ficha
-JOIN catastro.tf_construcciones f ON f.id_ficha = e.id_ficha
-WHERE b.tipo_ficha='01'
-GROUP BY 1,2,3,4,5,6,7,8,9
+LEFT JOIN ficha_principal fp         ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp       ON fp.id_ficha = tp.id_ficha
+LEFT JOIN construccion_principal cp  ON fp.id_ficha = cp.id_ficha
 ORDER BY a.gid;
 
 -- 08. Estado de la construcción
---DROP VIEW IF EXISTS geo.v_estado_construccion;
+DROP VIEW IF EXISTS geo.v_estado_construccion;
 CREATE OR REPLACE VIEW geo.v_estado_construccion AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    WHERE b.tipo_ficha = '01'
+    ORDER BY b.id_lote, b.id_ficha
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+),
+construccion_principal AS (
+    SELECT DISTINCT ON (id_ficha)
+        id_ficha,
+        ecc
+    FROM catastro.tf_construcciones
+    ORDER BY id_ficha, codi_construccion
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona IS NULL THEN '0'
-	ELSE d.tipo_persona
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-f.ecc,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    COALESCE(tp.tipo_persona, '0')                          AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    cp.ecc,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-JOIN catastro.tf_fichas_individuales e ON e.id_ficha = b.id_ficha
-JOIN catastro.tf_construcciones f ON f.id_ficha = e.id_ficha
-WHERE b.tipo_ficha='01'
-GROUP BY 1,2,3,4,5,6,7,8,9
+LEFT JOIN ficha_principal fp         ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp       ON fp.id_ficha = tp.id_ficha
+LEFT JOIN construccion_principal cp  ON fp.id_ficha = cp.id_ficha
 ORDER BY a.gid;
 
 -- 09. Nivel de construcción
---DROP VIEW IF EXISTS geo.v_nivel_construccion;
+DROP VIEW IF EXISTS geo.v_nivel_construccion;
 CREATE OR REPLACE VIEW geo.v_nivel_construccion AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    WHERE b.tipo_ficha = '01'
+    ORDER BY b.id_lote, b.id_ficha
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+),
+nivel_agg AS (
+    SELECT
+        id_ficha,
+        COUNT(id_construccion)          AS total_pisos,
+        MAX(TRIM(nume_piso))            AS piso_maximo
+    FROM catastro.tf_construcciones
+    GROUP BY id_ficha
+)
 SELECT
-a.gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona IS NULL THEN '0'
-	ELSE d.tipo_persona
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-f.nume_piso,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    COALESCE(tp.tipo_persona, '0')                          AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    COALESCE(na.total_pisos, 0)                             AS total_pisos,
+    na.piso_maximo,
+    a.geom
 FROM geo.tg_lote a
-JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-JOIN catastro.tf_fichas_individuales e ON b.id_ficha = e.id_ficha
-JOIN catastro.tf_construcciones f ON e.id_ficha = f.id_ficha
-WHERE b.tipo_ficha='01'
-GROUP BY 1,2,3,4,5,6,7,8,9
+LEFT JOIN ficha_principal fp   ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp ON fp.id_ficha = tp.id_ficha
+LEFT JOIN nivel_agg na         ON fp.id_ficha = na.id_ficha
 ORDER BY a.gid;
 
 -- 10. Actividades económicas
---DROP VIEW IF EXISTS geo.v_actividad_economica;
-/*
-CREATE VIEW geo.v_actividad_economica AS
+DROP VIEW IF EXISTS geo.v_actividad_economica;
+CREATE OR REPLACE VIEW geo.v_actividad_economica AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    WHERE b.tipo_ficha = '03'
+    ORDER BY b.id_lote, b.id_ficha
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+        c.id_ficha,
+        d.tipo_doc,
+        d.nume_doc,
+        d.tipo_persona,
+        d.ape_paterno,
+        d.ape_materno,
+        d.nombres,
+        d.razon_social
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
+),
+actividad_principal AS (
+    SELECT DISTINCT ON (e.id_ficha)
+        e.id_ficha,
+        f.codi_actividad
+    FROM catastro.tf_tactividades_ficha e
+    JOIN catastro.tf_actividades f ON e.codi_actividad = f.codi_actividad
+    ORDER BY e.id_ficha, f.codi_actividad
+)
 SELECT
-a.gid AS gid,
-b.id_lote,
-CASE
-	WHEN d.tipo_doc = '0'  THEN 'RUC'
-	WHEN d.tipo_doc = '2'  THEN 'DNI'
-END AS tipo_doc,
-d.nume_doc,
-CASE
-	WHEN d.tipo_persona IS NULL THEN '0'
-	ELSE d.tipo_persona
-END AS tipo_persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN 'PERSONA NATURAL'
-	WHEN d.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-END AS persona,
-CASE
-	WHEN d.tipo_persona = '1' THEN d.ape_paterno || ' ' || d.ape_materno || ' ' || d.nombres
-	WHEN d.tipo_persona = '2' THEN d.razon_social
-END AS ciudadano_razon_social,
-f.codi_actividad,
-a.geom
+    a.gid,
+    fp.id_lote,
+    CASE
+        WHEN tp.tipo_doc = '0' THEN 'RUC'
+        WHEN tp.tipo_doc = '2' THEN 'DNI'
+    END                                                     AS tipo_doc,
+    tp.nume_doc,
+    COALESCE(tp.tipo_persona, '0')                          AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END                                                     AS persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN tp.ape_paterno || ' ' || tp.ape_materno || ' ' || tp.nombres
+        WHEN tp.tipo_persona = '2' THEN tp.razon_social
+    END                                                     AS ciudadano_razon_social,
+    ap.codi_actividad,
+    a.geom
 FROM geo.tg_lote a
-LEFT JOIN catastro.tf_fichas b ON a.id_lote = b.id_lote
-LEFT JOIN catastro.tf_titulares c ON b.id_ficha = c.id_ficha
-LEFT JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
-LEFT JOIN catastro.tf_tactividades_ficha e ON b.id_ficha = e.id_ficha
-LEFT JOIN catastro.tf_actividades f ON e.codi_actividad = f.codi_actividad
-WHERE b.tipo_ficha='03'
-GROUP BY 1,2,3,4,5,6,7,8,9
+LEFT JOIN ficha_principal fp      ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp    ON fp.id_ficha = tp.id_ficha
+LEFT JOIN actividad_principal ap  ON fp.id_ficha = ap.id_ficha
 ORDER BY a.gid;
-*/
