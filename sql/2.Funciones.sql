@@ -18,6 +18,7 @@ WITH fichas_lote AS (
 )
 SELECT
     a.gid,
+	fl.id_lote,
     fl.imagen_lote                                          AS foto_lote,
     a.cuc,
     a.cod_sector,

@@ -9,6 +9,10 @@ from .comercio import Comercio, ComercioHistorico
 from .puerta import Puerta, PuertaHistorico
 from .usuario import Usuario
 from .rol import Rol, RolPermiso
+from .ficha import Ficha
+from .ficha_individual import FichaIndividual
+from .titular import Titular
+from .persona import Persona
 
 __all__ = [
   "Sector",
@@ -31,5 +35,9 @@ __all__ = [
   "PuertaHistorico",
   "Usuario",
   "Rol",
-  "RolPermiso"
+  "RolPermiso",
+  "Ficha",
+  "FichaIndividual",
+  "Titular",
+  "Persona"
 ]

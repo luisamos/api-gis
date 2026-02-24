@@ -18,6 +18,7 @@ ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
 )
 SELECT
 a.gid,
+fl.id_lote,
 fl.imagen_lote                                          AS foto_lote,
 a.cuc,
 a.cod_sector,
@@ -83,7 +84,6 @@ ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
 SELECT
 a.gid,
 fp.id_lote,
-e.clasificacion,
 substring(e.clasificacion, 1, 2)                        AS codi_clasi,
 CASE
 WHEN substring(e.clasificacion, 1, 2) = '01' THEN 'CASA HABITACIÓN'
@@ -102,10 +102,6 @@ FROM geo.tg_lote a
 LEFT JOIN ficha_principal fp                ON a.id_lote = fp.id_lote
 LEFT JOIN catastro.tf_fichas_individuales e ON fp.id_ficha = e.id_ficha
 ORDER BY a.gid;
-
-SELECT clasificacion FROM tf_fichas_individuales
-GROUP BY 1
-ORDER BY;
 
 SELECT codi_clasi FROM geo.v_clasificacion_predio
 GROUP BY 1
