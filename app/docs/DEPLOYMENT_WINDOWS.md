@@ -3,6 +3,7 @@
 Este documento explica el flujo recomendado para instalar **API-GIS** en Windows usando el script:
 
 - `app/docs/install_api_gis.ps1`
+- `app/docs/install_api_gis_gui.ps1`
 
 La guía está pensada para evitar errores de rutas, por ejemplo:
 
@@ -56,6 +57,16 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 ```powershell
 powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRoot "C:\apps\python\api-gis" -VenvPath "C:\apps\python\.venv" -ServiceName "geoCatastro" -PythonVersion "3.13.2" -ListenHost "127.0.0.1" -ListenPort 5000
 ```
+
+### 4.3 Ejecución con interfaz gráfica (GUI)
+
+Si prefieres no pasar parámetros por consola, puedes usar el asistente gráfico:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis_gui.ps1
+```
+
+Este asistente abre una ventana para capturar los parámetros y luego ejecuta `install_api_gis.ps1` como administrador.
 
 ## 5. Qué hace el script
 
@@ -128,12 +139,18 @@ Si estás en otra ruta, corrige el comando y pasa la ruta real en `-InstallRoot`
 
 ## 8. Parámetros del script
 
+Parámetros de `install_api_gis.ps1`:
+
 - `-InstallRoot`: ruta del repositorio (obligatorio que exista y contenga `requirements.txt`).
 - `-VenvPath`: ruta del entorno virtual.
 - `-ServiceName`: nombre del servicio de Windows.
 - `-PythonVersion`: versión de Python para instalación automática.
 - `-ListenHost`: host de escucha de Waitress.
 - `-ListenPort`: puerto de escucha.
+
+Parámetro de `install_api_gis_gui.ps1`:
+
+- `-InstallerScriptPath`: ruta al script principal (`install_api_gis.ps1`).
 
 ## 9. Resultado esperado
 
