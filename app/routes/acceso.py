@@ -27,8 +27,8 @@ def acceso_visor():
     contrasena = request.json.get("contrasena") if request.is_json else None
 
     if IS_DEV:
-      current_app.logger.debug("🟢\tUsuario: %s", usuario)
-      current_app.logger.debug("🟢\tContraseña: %s", contrasena)
+      current_app.logger.debug("\tUsuario: %s", usuario)
+      current_app.logger.debug("\tContraseña: %s", contrasena)
 
     if not usuario or not contrasena:
       return jsonify({"estado": False, "msj": "Faltan datos"}), 400
@@ -85,7 +85,7 @@ def acceso_visor():
     cookie_config = cookie_kwargs()
     if IS_DEV:
       current_app.logger.debug(
-        "🟢 Cookie config login: secure=%s samesite=%s partitioned=%s origin=%s",
+        "Cookie config login: secure=%s samesite=%s partitioned=%s origin=%s",
         cookie_config["secure"],
         cookie_config["samesite"],
         cookie_config["partitioned"],
@@ -96,10 +96,10 @@ def acceso_visor():
     resp.set_cookie("csrf_access_token", csrf_token, httponly=False, **cookie_config)
     return resp, 200
   except SQLAlchemyError as exc:
-    current_app.logger.exception("🔴 Error de base de datos: %s", exc)
+    current_app.logger.exception("Error de base de datos: %s", exc)
     return jsonify({"error": "Error de base de datos", "detalle": str(exc)}), 500
   except Exception as exc:  # pragma: no cover - fallback
-    current_app.logger.exception("🔴 Error interno del servidor: %s", exc)
+    current_app.logger.exception("Error interno del servidor: %s", exc)
     return jsonify({"error": "Error interno del servidor", "detalle": str(exc)}), 500
 
 @acceso_bp.route("/verificar/", methods=["POST"])

@@ -462,13 +462,13 @@ def validar_token():
     verify_jwt_in_request()
     if IS_DEV:
       token_data = get_jwt()
-      print("🟢 Token decodificado:", token_data)
+      print("Token decodificado:", token_data)
 
     id_usuario = get_jwt_identity()
     return id_usuario, True
 
   except Exception as e:
-    print("🔴 Error al verificar el token:", e)
+    print("Error al verificar el token:", e)
     return None, False
 
 @geodata_bp.route("/subir_shapefile", methods=["POST"])
