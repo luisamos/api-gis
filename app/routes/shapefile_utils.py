@@ -194,60 +194,131 @@ def geometry_matches(layer, expected_keyword: str) -> bool:
   geom_name = ogr_module.GeometryTypeToName(geom_type) or ""
   return expected_keyword.upper() in geom_name.upper()
 
-def get_layer_srid(layer, expected_epsg: Optional[int] = None) -> Optional[str]:
-  """Return the SRID for *layer*, falling back to *expected_epsg* when possible."""
+def extract_authority_code(spatial_ref) -> Optional[str]:
+  """Return the first authority code available in *spatial_ref*."""
+
+  for authority_target in (None, "PROJCS", "GEOGCS"):
+      try:
+          authority_name = spatial_ref.GetAuthorityName(authority_target)
+          authority_code = spatial_ref.GetAuthorityCode(authority_target)
+      except RuntimeError:
+          continue
+
+      if authority_name and authority_code:
+          return authority_code
+
+  return None
+
+def get_layer_srid_debug(layer, expected_epsg: Optional[int] = None) -> Dict[str, object]:
+  """Return SRID detection result and diagnostic details for *layer*."""
+
+  debug: Dict[str, object] = {
+      "srid": None,
+      "steps": [],
+  }
+
+  def append_step(step: str, **extra):
+      info = {"step": step}
+      info.update(extra)
+      debug["steps"].append(info)
 
   try:
       spatial_ref = layer.GetSpatialRef()
-  except RuntimeError:
-      return None
+      append_step("layer.GetSpatialRef", ok=spatial_ref is not None)
+  except RuntimeError as exc:
+      append_step("layer.GetSpatialRef", ok=False, error=str(exc))
+      return debug
 
   if spatial_ref is None:
-      return None
+      return debug
 
-  try:
-      authority_name = spatial_ref.GetAuthorityName(None)
-      authority_code = spatial_ref.GetAuthorityCode(None)
-  except RuntimeError:
-      authority_name = None
-      authority_code = None
+  authority_code = extract_authority_code(spatial_ref)
+  append_step("extract_authority_code(original)", code=authority_code)
+  if authority_code:
+      debug["srid"] = authority_code
+      return debug
 
-  if authority_name and authority_code:
-      return authority_code
+  # Algunos .prj (especialmente exportados por ArcGIS/QGIS en Windows) no
+  # incluyen AUTHORITY en el WKT. Intentamos inferirlo directamente con GDAL.
+  for transform_esri_wkt in (False, True):
+      step_name = "AutoIdentifyEPSG" if not transform_esri_wkt else "AutoIdentifyEPSG+MorphFromESRI"
+      try:
+          candidate_srs = spatial_ref.Clone()
+      except (RuntimeError, AttributeError) as exc:
+          append_step(step_name, ok=False, error=f"No se pudo clonar SpatialRef: {exc}")
+          continue
 
-  if CRS is None:
-      current_app.logger.warning(
-          "pyproj no está instalado; no se puede inferir EPSG desde WKT sin códigos de autoridad"
-      )
-      return None
+      if transform_esri_wkt:
+          try:
+              candidate_srs.MorphFromESRI()
+              append_step("MorphFromESRI", ok=True)
+          except RuntimeError as exc:
+              append_step("MorphFromESRI", ok=False, error=str(exc))
+              continue
+
+      try:
+          candidate_srs.AutoIdentifyEPSG()
+      except RuntimeError as exc:
+          append_step(step_name, ok=False, error=str(exc))
+          continue
+
+      authority_code = extract_authority_code(candidate_srs)
+      append_step(step_name, ok=True, code=authority_code)
+      if authority_code:
+          debug["srid"] = authority_code
+          return debug
 
   try:
       wkt = spatial_ref.ExportToWkt()
-  except RuntimeError:
+      append_step("ExportToWkt", ok=bool(wkt), length=len(wkt or ""))
+  except RuntimeError as exc:
+      append_step("ExportToWkt", ok=False, error=str(exc))
       wkt = None
 
   if not wkt:
-      return None
+      return debug
+
+  if CRS is None:
+      append_step(
+          "pyproj", ok=False,
+          error="pyproj no está instalado; no se puede inferir EPSG desde WKT sin códigos de autoridad"
+      )
+      return debug
 
   try:
       crs = CRS.from_wkt(wkt)
-  except CRSError:
-      return None
+      append_step("CRS.from_wkt", ok=True)
+  except CRSError as exc:
+      append_step("CRS.from_wkt", ok=False, error=str(exc))
+      return debug
 
   epsg_code = crs.to_epsg()
+  append_step("CRS.to_epsg", code=epsg_code)
   if epsg_code is not None:
-      return str(epsg_code)
+      debug["srid"] = str(epsg_code)
+      return debug
 
   if expected_epsg is not None:
       try:
           expected_crs = CRS.from_epsg(expected_epsg)
-      except CRSError:
-          return None
+      except CRSError as exc:
+          append_step("CRS.from_epsg", ok=False, error=str(exc), epsg=expected_epsg)
+          return debug
 
-      if crs == expected_crs or crs.is_exact_same(expected_crs):
-          return str(expected_epsg)
+      same_crs = crs == expected_crs or crs.is_exact_same(expected_crs)
+      append_step("CRS.compare_expected", ok=same_crs, epsg=expected_epsg)
+      if same_crs:
+          debug["srid"] = str(expected_epsg)
 
-  return None
+  return debug
+
+
+def get_layer_srid(layer, expected_epsg: Optional[int] = None) -> Optional[str]:
+  """Return the SRID for *layer*, falling back to *expected_epsg* when possible."""
+
+  result = get_layer_srid_debug(layer, expected_epsg=expected_epsg)
+  srid = result.get("srid")
+  return str(srid) if srid is not None else None
 
 def validate_fields(
   layer,

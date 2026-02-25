@@ -38,7 +38,7 @@ from app.routes.shapefile_utils import (
   find_field,
   find_shapefile,
   geometry_matches,
-  get_layer_srid,
+  get_layer_srid_debug,
   handle_gdal_missing,
   handle_shapefile_upload,
   load_metadata,
@@ -548,8 +548,17 @@ def validar_shapefile():
           400,
         )
 
-      srid = get_layer_srid(layer, expected_epsg=table_def.srid)
-      if srid != str(table_def.srid):
+      srid_debug = get_layer_srid_debug(layer, expected_epsg=table_def.srid)
+      srid = srid_debug.get("srid")
+      if str(srid) != str(table_def.srid):
+        current_app.logger.warning(
+          "Validación SRID falló para tabla=%s carpeta=%s; esperado=%s obtenido=%s detalles=%s",
+          table_def.name,
+          carpeta,
+          table_def.srid,
+          srid,
+          srid_debug,
+        )
         datasource = None
         layer = None
         return (
@@ -557,6 +566,7 @@ def validar_shapefile():
             {
               "estado": False,
               "mensaje": f"La proyección del Shapefile debe ser EPSG:{table_def.srid}",
+              "detalles": srid_debug,
             }
           ),
           400,
