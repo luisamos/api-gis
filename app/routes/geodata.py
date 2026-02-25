@@ -31,7 +31,7 @@ from app.models import (
   Puerta,
   PuertaHistorico,
 )
-from app.routes.shapefile_utils import (
+from app.helpers.shapefile_utils import (
   FieldSpec,
   ID_UBIGEO,
   extract_fields,

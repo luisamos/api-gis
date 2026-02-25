@@ -3,7 +3,7 @@
 #
 git init
 git add .
-git commit -m "v.1.2.10 | 25/02/2026 14:30"
+git commit -m "v.1.2.10 | 25/02/2026 15:00"
 git branch -M main
 git remote add origin https://github.com/luisamos/api-gis.git
 git push -u origin main

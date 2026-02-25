@@ -21,11 +21,14 @@ except ImportError:
 from functools import wraps
 try:
     from pyproj import CRS
-    from pyproj.exceptions import CRSError
+    from pyproj.exceptions import CRSError, ProjError
 except ImportError:
     CRS = None
 
-    class CRSError(Exception):
+    class ProjError(Exception):
+        pass
+
+    class CRSError(ProjError):
         pass
 from werkzeug.datastructures import FileStorage
 from app.config import ID_UBIGEO
@@ -288,12 +291,17 @@ def get_layer_srid_debug(layer, expected_epsg: Optional[int] = None) -> Dict[str
   try:
       crs = CRS.from_wkt(wkt)
       append_step("CRS.from_wkt", ok=True)
-  except CRSError as exc:
+  except (CRSError, ProjError, RuntimeError, ValueError) as exc:
       append_step("CRS.from_wkt", ok=False, error=str(exc))
       return debug
 
-  epsg_code = crs.to_epsg()
-  append_step("CRS.to_epsg", code=epsg_code)
+  try:
+      epsg_code = crs.to_epsg()
+      append_step("CRS.to_epsg", code=epsg_code)
+  except (CRSError, ProjError, RuntimeError, ValueError) as exc:
+      append_step("CRS.to_epsg", ok=False, error=str(exc))
+      return debug
+
   if epsg_code is not None:
       debug["srid"] = str(epsg_code)
       return debug
@@ -301,11 +309,16 @@ def get_layer_srid_debug(layer, expected_epsg: Optional[int] = None) -> Dict[str
   if expected_epsg is not None:
       try:
           expected_crs = CRS.from_epsg(expected_epsg)
-      except CRSError as exc:
+      except (CRSError, ProjError, RuntimeError, ValueError) as exc:
           append_step("CRS.from_epsg", ok=False, error=str(exc), epsg=expected_epsg)
           return debug
 
-      same_crs = crs == expected_crs or crs.is_exact_same(expected_crs)
+      try:
+          same_crs = crs == expected_crs or crs.is_exact_same(expected_crs)
+      except (CRSError, ProjError, RuntimeError, ValueError) as exc:
+          append_step("CRS.compare_expected", ok=False, error=str(exc), epsg=expected_epsg)
+          return debug
+
       append_step("CRS.compare_expected", ok=same_crs, epsg=expected_epsg)
       if same_crs:
           debug["srid"] = str(expected_epsg)
