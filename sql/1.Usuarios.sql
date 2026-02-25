@@ -18,7 +18,7 @@ JOIN catastro.roles r
 
 UPDATE catastro.tf_usuarios SET password = '$2b$10$Bn9xPiBWXOb2aPV4WMVpO.J9GTUTMB5v7B.tFFG1fnvxNX2X7i10G',
 estado = 1
-WHERE id_usuario IN (25);
+WHERE id_usuario IN (64);
 
 SELECT * FROM catastro.tf_usuarios WHERE id_usuario IN (25, 49, 50);
 

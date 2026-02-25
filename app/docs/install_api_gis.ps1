@@ -8,6 +8,10 @@ param(
     [int]$ListenPort = 5000
 )
 
+$GdalMsiUrl = "https://download.gisinternals.com/sdk/downloads/release-1944-x64-gdal-3-12-1-mapserver-8-6-0/gdal-3.12.1-1944-x64-core.msi"
+$GdalMsiName = "gdal-3.12.1-1944-x64-core.msi"
+$DefaultProjLibPath = "C:\Program Files\GDAL\projlib"
+
 $ErrorActionPreference = "Stop"
 $OutputEncoding = [System.Text.Encoding]::UTF8
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
@@ -114,6 +118,36 @@ function Ensure-Project {
     if (-not (Test-Path $requirements)) {
         throw "No se encontró requirements.txt en $Root"
     }
+}
+
+function Ensure-GdalRuntime {
+    param(
+        [string]$DownloadUrl,
+        [string]$InstallerName,
+        [string]$ProjLibPath
+    )
+
+    if (-not (Test-Path $ProjLibPath)) {
+        $tmpInstaller = Join-Path $env:TEMP $InstallerName
+        Write-Host "Descargando GDAL Core desde $DownloadUrl"
+        Invoke-WebRequest -Uri $DownloadUrl -OutFile $tmpInstaller
+
+        Write-Host "Instalando GDAL Core de forma silenciosa..."
+        $process = Start-Process -FilePath "msiexec.exe" -ArgumentList @('/i', '"' + $tmpInstaller + '"', '/qn', '/norestart') -PassThru -Wait
+        if ($process.ExitCode -ne 0) {
+            throw "La instalación silenciosa de GDAL finalizó con código $($process.ExitCode)."
+        }
+
+        Remove-Item $tmpInstaller -Force -ErrorAction SilentlyContinue
+
+        if (-not (Test-Path $ProjLibPath)) {
+            throw "Se instaló GDAL, pero no se encontró la carpeta PROJ esperada en '$ProjLibPath'. Verifica la ruta de instalación de GDAL."
+        }
+    }
+
+    [Environment]::SetEnvironmentVariable('PROJ_LIB', $ProjLibPath, 'Machine')
+    [Environment]::SetEnvironmentVariable('PROJ_LIB', $ProjLibPath, 'Process')
+    Write-Host "Variable de entorno PROJ_LIB registrada en: $ProjLibPath"
 }
 
 function Install-Dependencies {
@@ -326,6 +360,7 @@ function Create-OrUpdate-Service {
 
 Require-Admin
 Ensure-Project -Root $InstallRoot
+Ensure-GdalRuntime -DownloadUrl $GdalMsiUrl -InstallerName $GdalMsiName -ProjLibPath $DefaultProjLibPath
 Ensure-Python -Version $PythonVersion
 
 Install-Dependencies -Root $InstallRoot -VirtualEnvPath $VenvPath -PythonVersion $PythonVersion

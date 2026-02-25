@@ -23,6 +23,10 @@ Usa esta estructura base:
 2. Tener conexión a internet (para instalar Python/dependencias si faltan).
 3. Contar con permisos para crear servicios de Windows.
 4. Tener el proyecto en disco (clonado o copiado).
+5. Instalar GDAL Core para Windows (x64) desde GISInternals:
+   - https://download.gisinternals.com/sdk/downloads/release-1944-x64-gdal-3-12-1-mapserver-8-6-0/gdal-3.12.1-1944-x64-core.msi
+
+   El instalador usa por defecto la ruta `C:\Program Files\GDAL\projlib` y registra la variable de entorno `PROJ_LIB` con ese valor.
 
 ## 3. Preparar carpeta y clonar proyecto
 
@@ -58,13 +62,15 @@ powershell -ExecutionPolicy Bypass -File app/docs/install_api_gis.ps1 -InstallRo
 1. Valida que PowerShell esté en modo administrador.
 2. Verifica que exista `-InstallRoot`.
 3. Verifica que exista `requirements.txt` dentro de `-InstallRoot`.
-4. Instala Python si no está disponible en `py launcher`.
-5. Crea/recrea el entorno virtual en `-VenvPath`.
-6. Instala dependencias sin compilar GDAL desde fuente.
-7. Instala GDAL desde wheel local en `app/lib`.
-8. Genera `run_api_gis.bat`.
-9. Usa NSSM desde el paquete local `app/lib/nssm-2.24.zip` y lo copia en `tools\nssm.exe`.
-10. Crea o actualiza el servicio Windows usando NSSM y lo inicia.
+4. Descarga e instala GDAL Core (MSI) si no detecta `C:\Program Files\GDAL\projlib`.
+5. Registra la variable de entorno de sistema `PROJ_LIB=C:\Program Files\GDAL\projlib`.
+6. Instala Python si no está disponible en `py launcher`.
+7. Crea/recrea el entorno virtual en `-VenvPath`.
+8. Instala dependencias sin compilar GDAL desde fuente.
+9. Instala GDAL desde wheel local en `app/lib`.
+10. Genera `run_api_gis.bat`.
+11. Usa NSSM desde el paquete local `app/lib/nssm-2.24.zip` y lo copia en `tools\nssm.exe`.
+12. Crea o actualiza el servicio Windows usando NSSM y lo inicia.
 
 ## 6. Verificaciones post-instalación
 
@@ -99,6 +105,15 @@ Si estás en otra ruta, corrige el comando y pasa la ruta real en `-InstallRoot`
 - Asegúrate de que `requirements.txt` exista en la carpeta indicada.
 
 ### Error instalando GDAL
+
+- Verifica que el instalador MSI de GDAL Core esté disponible:
+  `https://download.gisinternals.com/sdk/downloads/release-1944-x64-gdal-3-12-1-mapserver-8-6-0/gdal-3.12.1-1944-x64-core.msi`
+- Confirma que exista la ruta `C:\Program Files\GDAL\projlib`.
+- Confirma variable de entorno `PROJ_LIB`:
+
+```powershell
+[Environment]::GetEnvironmentVariable("PROJ_LIB", "Machine")
+```
 
 - El script espera un wheel local compatible en `app/lib`.
 - Si cambias versión de Python, agrega el wheel correspondiente (`cp312`, `cp313`, etc.) o usa una versión compatible con wheel disponible.
