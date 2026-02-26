@@ -1,11 +1,11 @@
 --
 -- FECHA DE CREACIÓN 	 : 22/10/2024
--- FECHA DE MODIFICACIÓN : 23/02/2026
+-- FECHA DE MODIFICACIÓN : 26/02/2026
 --
 
 -- 01. Lotes con y sin ficha catastral
-DROP VIEW IF EXISTS geo.v_catastro_lote;
-CREATE OR REPLACE VIEW geo.v_catastro_lote AS
+DROP VIEW IF EXISTS geo.v_lote;
+CREATE OR REPLACE VIEW geo.v_lote AS
 WITH fichas_lote AS (
     SELECT DISTINCT ON (b.id_lote)
         b.id_lote,
@@ -22,19 +22,21 @@ SELECT
     fl.imagen_lote                                          AS foto_lote,
     a.cuc,
     a.cod_sector,
-    a.cod_mzna                                              AS cod_manzana,
+    a.cod_mzna,
     a.cod_lote,
-    ROUND(ST_Area(a.geom)::decimal, 2)                      AS area_grafica,
-    COALESCE(ROUND(fl.area_verificada::decimal, 2), 0)      AS area_verificada,
+    ROUND(ST_Area(a.geom)::decimal, 2)                      AS a_grafi,
+    COALESCE(ROUND(fl.area_verificada::decimal, 2), 0)      AS a_verifi,
     CASE
-        WHEN fl.id_lote IS NOT NULL THEN 'SI'
-        ELSE 'NO'
-    END                                                     AS ficha
+        WHEN fl.id_lote IS NOT NULL THEN 1
+        ELSE 2
+    END                                                     AS ficha,
+	a.cod_sector || a.cod_mzna || a. cod_lote				AS idlote,
+	a.geom
 FROM geo.tg_lote a
 LEFT JOIN fichas_lote fl ON a.id_lote = fl.id_lote
 ORDER BY a.cod_sector, a.cod_mzna, a.cod_lote;
 
-SELECT * FROM geo.v_catastro_lote;
+SELECT * FROM geo.v_lote;
 
 -- 02. Servicios básicos
 DROP VIEW IF EXISTS geo.v_servicio_basico;
@@ -97,7 +99,7 @@ LEFT JOIN titular_principal tp         ON fp.id_ficha = tp.id_ficha
 LEFT JOIN catastro.tf_servicios_basicos e ON fp.id_ficha = e.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_servicio_basico;
+--SELECT * FROM geo.v_servicio_basico;
 
 -- 03. Clasificación del Predio
 DROP VIEW IF EXISTS geo.v_clasificacion_predio;
@@ -158,7 +160,7 @@ LEFT JOIN titular_principal tp              ON fp.id_ficha = tp.id_ficha
 LEFT JOIN catastro.tf_fichas_individuales e ON fp.id_ficha = e.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_clasificacion_predio;
+--SELECT * FROM geo.v_clasificacion_predio;
 
 -- 04. Personas Natural / Persona Jurídica
 DROP VIEW IF EXISTS geo.v_tipo_persona;
@@ -207,7 +209,7 @@ LEFT JOIN ficha_principal fp   ON a.id_lote = fp.id_lote
 LEFT JOIN titular_principal tp ON fp.id_ficha = tp.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_tipo_persona;
+--SELECT * FROM geo.v_tipo_persona;
 
 -- 05. Tipo de uso
 DROP VIEW IF EXISTS geo.v_tipo_uso;
@@ -260,7 +262,7 @@ LEFT JOIN catastro.tf_fichas_individuales e ON fp.id_ficha = e.id_ficha
 LEFT JOIN catastro.tf_usos u               ON u.codi_uso = e.codi_uso
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_tipo_uso;
+--SELECT * FROM geo.v_tipo_uso;
 
 -- 06. Material de construcción
 DROP VIEW IF EXISTS geo.v_material_construccion;
@@ -319,7 +321,7 @@ LEFT JOIN titular_principal tp       ON fp.id_ficha = tp.id_ficha
 LEFT JOIN construccion_principal cp  ON fp.id_ficha = cp.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_material_construccion;
+--SELECT * FROM geo.v_material_construccion;
 
 -- 07. Estado de conservación
 DROP VIEW IF EXISTS geo.v_estado_conservacion;
@@ -378,7 +380,7 @@ LEFT JOIN titular_principal tp       ON fp.id_ficha = tp.id_ficha
 LEFT JOIN construccion_principal cp  ON fp.id_ficha = cp.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_estado_conservacion;
+--SELECT * FROM geo.v_estado_conservacion;
 
 -- 08. Estado de la construcción
 DROP VIEW IF EXISTS geo.v_estado_construccion;
@@ -437,7 +439,7 @@ LEFT JOIN titular_principal tp       ON fp.id_ficha = tp.id_ficha
 LEFT JOIN construccion_principal cp  ON fp.id_ficha = cp.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_estado_construccion;
+--SELECT * FROM geo.v_estado_construccion;
 
 -- 09. Nivel de construcción
 DROP VIEW IF EXISTS geo.v_nivel_construccion;
@@ -498,7 +500,7 @@ LEFT JOIN titular_principal tp ON fp.id_ficha = tp.id_ficha
 LEFT JOIN nivel_agg na         ON fp.id_ficha = na.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_nivel_construccion;
+--SELECT * FROM geo.v_nivel_construccion;
 
 -- 10. Actividades económicas
 DROP VIEW IF EXISTS geo.v_actividad_economica;
@@ -558,4 +560,4 @@ LEFT JOIN titular_principal tp    ON fp.id_ficha = tp.id_ficha
 LEFT JOIN actividad_principal ap  ON fp.id_ficha = ap.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_actividad_economica;
+--SELECT * FROM geo.v_actividad_economica;

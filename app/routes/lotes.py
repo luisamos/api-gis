@@ -10,10 +10,12 @@ from app.models import Ficha, FichaIndividual, Lote, Persona, Titular
 lotes_bp = Blueprint("lotes", __name__, url_prefix="/lotes")
 
 
-@lotes_bp.route("/", methods=["GET"], strict_slashes=False)
-#@jwt_required()
-def consulta():
-  id_lote = (request.args.get("idlote") or "").strip()
+@lotes_bp.route("/", methods=["POST"], strict_slashes=False)
+# @jwt_required()
+def por_id_lote():
+  data = request.get_json(silent=True) or {}
+  id_lote = (data.get("idlote") or "").strip()
+
   if not id_lote:
     return jsonify({"estado": False, "mensaje": "El parámetro 'idlote' es obligatorio"}), 400
 
