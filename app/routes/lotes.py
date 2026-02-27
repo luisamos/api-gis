@@ -11,7 +11,7 @@ lotes_bp = Blueprint("lotes", __name__, url_prefix="/lotes")
 
 
 @lotes_bp.route("/", methods=["POST"], strict_slashes=False)
-# @jwt_required()
+@jwt_required()
 def por_id_lote():
   data = request.get_json(silent=True) or {}
   id_lote = (data.get("idlote") or "").strip()
