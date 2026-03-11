@@ -1,0 +1,10 @@
+{
+  "validado": true,
+  "fields": {
+    "cod_sector": "cod_sector",
+    "cod_via": "codi_via",
+    "nomb_via": "nomb_via"
+  },
+  "tabla": "EjeVia",
+  "fechaValidacion": "2026-03-10T15:28:37.715060"
+}

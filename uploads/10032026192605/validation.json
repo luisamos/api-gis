@@ -1,0 +1,10 @@
+{
+  "validado": true,
+  "fields": {
+    "cod_hab_urb": "CODI_HAB_U",
+    "tipo_hab_urb": "TIPO_HAB_U",
+    "nomb_hab_urb": "NOMB_HAB_U"
+  },
+  "tabla": "HabilitacionUrbana",
+  "fechaValidacion": "2026-03-11T00:26:11.646535"
+}
