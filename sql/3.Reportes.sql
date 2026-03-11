@@ -1,39 +1,10 @@
 -- Fecha de creación: 13/09/2023
 -- Fecha de actualización: 14/03/2024
 
--- 01. Cuenta con y/o sin ficha catastral
-DROP VIEW IF EXISTS geo.v_lotes_con_sin_ficha;
-CREATE VIEW geo.v_lotes_con_sin_ficha AS
-SELECT
-row_number() OVER(order by a.cod_sector) AS gid,
-a.cod_sector,
-SUM(d.con_ficha) AS con_ficha,
-SUM(e.sin_ficha) AS sin_ficha,
-st_geomfromtext('POINT (0 0)',4326) AS geom
-FROM geo.tg_lote a
-LEFT JOIN (SELECT b.id_lote, b.cod_sector, 1 AS con_ficha
-			FROM geo.tg_lote b
-			LEFT JOIN catastro.tf_fichas c
-			ON b.id_lote = c.id_lote
-		    WHERE c.id_lote IS NOT NULL
-			GROUP BY 1,2
-			ORDER BY 1) d ON a.id_lote = d.id_lote
-LEFT JOIN (SELECT b.id_lote, b.cod_sector, 1 AS sin_ficha
-			FROM geo.tg_lote b
-			LEFT JOIN catastro.tf_fichas c
-			ON b.id_lote = c.id_lote
-		    WHERE c.id_lote IS NULL
-			GROUP BY 1,2
-			ORDER BY 1) e ON a.id_lote = e.id_lote
-GROUP BY 2
-ORDER BY 1;
-
-SELECT gid, cod_sector, CASE WHEN con_ficha IS NULL THEN 0 ELSE con_ficha END AS con_ficha, CASE WHEN sin_ficha IS NULL THEN 0 ELSE sin_ficha END AS sin_ficha, geom FROM geo.v_lotes_con_sin_ficha;
-
 --
--- 2. Obtener coordenadas por Lote
+-- 0. Obtener coordenadas por Lote
 --
-CREATE OR REPLACE FUNCTION geo.obtenerCoordenadasLote(pId_lote character varying)
+CREATE OR REPLACE FUNCTION geo.obtener_coordenada_lote(pId_lote character varying)
 RETURNS TABLE(id_lote character varying, x decimal, y decimal, geom geometry) AS
 $BODY$
 BEGIN
@@ -85,3 +56,73 @@ FROM (
 SELECT * FROM geo.tg_lote;
 */
 
+--
+-- 01. Cuenta con y/o sin ficha catastral
+--
+DROP VIEW IF EXISTS geo.v_reporte_lote;
+CREATE VIEW geo.v_reporte_lote AS
+SELECT
+row_number() OVER(order by a.cod_sector) AS gid,
+a.cod_sector,
+SUM(d.con_ficha) AS con_ficha,
+SUM(e.sin_ficha) AS sin_ficha,
+st_geomfromtext('POINT (0 0)',4326) AS geom
+FROM geo.tg_lote a
+LEFT JOIN (SELECT b.id_lote, b.cod_sector, 1 AS con_ficha
+			FROM geo.tg_lote b
+			LEFT JOIN catastro.tf_fichas c
+			ON b.id_lote = c.id_lote
+		    WHERE c.id_lote IS NOT NULL
+			GROUP BY 1,2
+			ORDER BY 1) d ON a.id_lote = d.id_lote
+LEFT JOIN (SELECT b.id_lote, b.cod_sector, 1 AS sin_ficha
+			FROM geo.tg_lote b
+			LEFT JOIN catastro.tf_fichas c
+			ON b.id_lote = c.id_lote
+		    WHERE c.id_lote IS NULL
+			GROUP BY 1,2
+			ORDER BY 1) e ON a.id_lote = e.id_lote
+GROUP BY 2
+ORDER BY 1;
+
+SELECT gid, cod_sector, CASE WHEN con_ficha IS NULL THEN 0 ELSE con_ficha END AS con_ficha, CASE WHEN sin_ficha IS NULL THEN 0 ELSE sin_ficha END AS sin_ficha, geom FROM geo.v_reporte_lote;
+
+--
+-- 2. Servicios básicos
+--
+DROP VIEW IF EXISTS geo.v_reporte_servicio_basico;
+CREATE VIEW geo.v_reporte_servicio_basico AS
+SELECT
+    row_number() OVER (ORDER BY s.cod_sector) AS gid,
+    s.cod_sector,
+    COUNT(DISTINCT l.id_lote) AS total_predios,
+    COUNT(DISTINCT CASE WHEN sb.agua = 1 THEN l.id_lote END) AS predios_con_agua,
+    COUNT(DISTINCT CASE WHEN sb.agua = 2 THEN l.id_lote END) AS predios_sin_agua,
+    COUNT(DISTINCT CASE WHEN sb.luz = 1 THEN l.id_lote END) AS predios_con_luz,
+    COUNT(DISTINCT CASE WHEN sb.luz = 2 THEN l.id_lote END) AS predios_sin_luz,
+    COUNT(DISTINCT CASE WHEN sb.desague = 1 THEN l.id_lote END) AS predios_con_desague,
+    COUNT(DISTINCT CASE WHEN sb.desague = 2 THEN l.id_lote END) AS predios_sin_desague,
+    COUNT(DISTINCT CASE WHEN sb.telefono = 1 THEN l.id_lote END) AS predios_con_telefono,
+    COUNT(DISTINCT CASE WHEN sb.telefono = 2 THEN l.id_lote END) AS predios_sin_telefono,
+    COUNT(DISTINCT CASE WHEN sb.gas = 1 THEN l.id_lote END) AS predios_con_gas,
+    COUNT(DISTINCT CASE WHEN sb.gas = 2 THEN l.id_lote END) AS predios_sin_gas,
+    COUNT(DISTINCT CASE WHEN sb.internet = 1 THEN l.id_lote END) AS predios_con_internet,
+    COUNT(DISTINCT CASE WHEN sb.internet = 2 THEN l.id_lote END) AS predios_sin_internet,
+    COUNT(DISTINCT CASE WHEN sb.tvcable = 1 THEN l.id_lote END) AS predios_con_tvcable,
+    COUNT(DISTINCT CASE WHEN sb.tvcable = 2 THEN l.id_lote END) AS predios_sin_tvcable,
+    ST_GeomFromText('POINT (0 0)', 4326) AS geom
+FROM (
+    SELECT DISTINCT cod_sector
+    FROM geo.tg_lote
+    WHERE cod_sector IS NOT NULL
+) s
+LEFT JOIN geo.tg_lote l
+    ON l.cod_sector = s.cod_sector
+LEFT JOIN catastro.tf_fichas f
+    ON f.id_lote = l.id_lote
+LEFT JOIN catastro.tf_servicios_basicos sb
+    ON sb.id_ficha = f.id_ficha
+GROUP BY s.cod_sector
+ORDER BY s.cod_sector;
+
+SELECT * FROM geo.v_reporte_servicio_basico;

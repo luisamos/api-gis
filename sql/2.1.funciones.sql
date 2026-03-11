@@ -1,40 +1,42 @@
 --
 -- FECHA DE CREACIÓN    : 22/10/2024
--- FECHA DE MODIFICACIÓN : 23/02/2026
+-- FECHA DE MODIFICACIÓN : 10/03/2026
 --
 
 -- 01. Lotes con y sin ficha catastral
-DROP VIEW IF EXISTS geo.v_catastro_lote;
-CREATE OR REPLACE VIEW geo.v_catastro_lote AS
+DROP VIEW IF EXISTS geo.v_lote;
+CREATE OR REPLACE VIEW geo.v_lote AS
 WITH fichas_lote AS (
-SELECT DISTINCT ON (b.id_lote)
-b.id_lote,
-b.id_ficha,
-c.imagen_lote,
-c.area_verificada
-FROM catastro.tf_fichas b
-LEFT JOIN catastro.tf_fichas_individuales c ON b.id_ficha = c.id_ficha
-ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha,
+        c.imagen_lote,
+        c.area_verificada
+    FROM catastro.tf_fichas b
+    LEFT JOIN catastro.tf_fichas_individuales c ON b.id_ficha = c.id_ficha
+    ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
 )
 SELECT
-a.gid,
-fl.id_lote,
-fl.imagen_lote                                          AS foto_lote,
-a.cuc,
-a.cod_sector,
-a.cod_mzna                                              AS cod_manzana,
-a.cod_lote,
-ROUND(ST_Area(a.geom)::decimal, 2)                      AS area_grafica,
-COALESCE(ROUND(fl.area_verificada::decimal, 2), 0)      AS area_verificada,
-CASE
-WHEN fl.id_lote IS NOT NULL THEN 'SI'
-ELSE 'NO'
-END                                                     AS ficha
+    a.gid,
+	fl.id_lote,
+    fl.imagen_lote                                          AS foto_lote,
+    a.cuc,
+    a.cod_sector,
+    a.cod_mzna,
+    a.cod_lote,
+    ROUND(ST_Area(a.geom)::decimal, 2)                      AS a_grafi,
+    COALESCE(ROUND(fl.area_verificada::decimal, 2), 0)      AS a_verifi,
+    CASE
+        WHEN fl.id_lote IS NOT NULL THEN 1
+        ELSE 2
+    END                                                     AS ficha,
+	a.cod_sector || a.cod_mzna || a. cod_lote				AS idlote,
+	a.geom
 FROM geo.tg_lote a
 LEFT JOIN fichas_lote fl ON a.id_lote = fl.id_lote
 ORDER BY a.cod_sector, a.cod_mzna, a.cod_lote;
 
-SELECT * FROM geo.v_catastro_lote;
+SELECT * FROM geo.v_lote;
 
 -- 02. Servicios básicos
 DROP VIEW IF EXISTS geo.v_servicio_basico;
