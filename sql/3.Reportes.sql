@@ -92,24 +92,46 @@ SELECT gid, cod_sector, CASE WHEN con_ficha IS NULL THEN 0 ELSE con_ficha END AS
 --
 DROP VIEW IF EXISTS geo.v_reporte_servicio_basico;
 CREATE VIEW geo.v_reporte_servicio_basico AS
+WITH servicio_por_lote AS (
+    SELECT
+        f.id_lote,
+        bool_or(sb.agua = 1) AS agua_con,
+        bool_or(sb.agua = 2) AS agua_sin,
+        bool_or(sb.luz = 1) AS luz_con,
+        bool_or(sb.luz = 2) AS luz_sin,
+        bool_or(sb.desague = 1) AS desague_con,
+        bool_or(sb.desague = 2) AS desague_sin,
+        bool_or(sb.telefono = 1) AS telefono_con,
+        bool_or(sb.telefono = 2) AS telefono_sin,
+        bool_or(sb.gas = 1) AS gas_con,
+        bool_or(sb.gas = 2) AS gas_sin,
+        bool_or(sb.internet = 1) AS internet_con,
+        bool_or(sb.internet = 2) AS internet_sin,
+        bool_or(sb.tvcable = 1) AS tvcable_con,
+        bool_or(sb.tvcable = 2) AS tvcable_sin
+    FROM catastro.tf_fichas f
+    LEFT JOIN catastro.tf_servicios_basicos sb
+        ON sb.id_ficha = f.id_ficha
+    GROUP BY f.id_lote
+)
 SELECT
     row_number() OVER (ORDER BY s.cod_sector) AS gid,
     s.cod_sector,
     COUNT(DISTINCT l.id_lote) AS total_predios,
-    COUNT(DISTINCT CASE WHEN sb.agua = 1 THEN l.id_lote END) AS predios_con_agua,
-    COUNT(DISTINCT CASE WHEN sb.agua = 2 THEN l.id_lote END) AS predios_sin_agua,
-    COUNT(DISTINCT CASE WHEN sb.luz = 1 THEN l.id_lote END) AS predios_con_luz,
-    COUNT(DISTINCT CASE WHEN sb.luz = 2 THEN l.id_lote END) AS predios_sin_luz,
-    COUNT(DISTINCT CASE WHEN sb.desague = 1 THEN l.id_lote END) AS predios_con_desague,
-    COUNT(DISTINCT CASE WHEN sb.desague = 2 THEN l.id_lote END) AS predios_sin_desague,
-    COUNT(DISTINCT CASE WHEN sb.telefono = 1 THEN l.id_lote END) AS predios_con_telefono,
-    COUNT(DISTINCT CASE WHEN sb.telefono = 2 THEN l.id_lote END) AS predios_sin_telefono,
-    COUNT(DISTINCT CASE WHEN sb.gas = 1 THEN l.id_lote END) AS predios_con_gas,
-    COUNT(DISTINCT CASE WHEN sb.gas = 2 THEN l.id_lote END) AS predios_sin_gas,
-    COUNT(DISTINCT CASE WHEN sb.internet = 1 THEN l.id_lote END) AS predios_con_internet,
-    COUNT(DISTINCT CASE WHEN sb.internet = 2 THEN l.id_lote END) AS predios_sin_internet,
-    COUNT(DISTINCT CASE WHEN sb.tvcable = 1 THEN l.id_lote END) AS predios_con_tvcable,
-    COUNT(DISTINCT CASE WHEN sb.tvcable = 2 THEN l.id_lote END) AS predios_sin_tvcable,
+    COUNT(DISTINCT CASE WHEN spl.agua_con THEN l.id_lote END) AS predios_con_agua,
+    COUNT(DISTINCT CASE WHEN COALESCE(spl.agua_con, FALSE) = FALSE THEN l.id_lote END) AS predios_sin_agua,
+    COUNT(DISTINCT CASE WHEN spl.luz_con THEN l.id_lote END) AS predios_con_luz,
+    COUNT(DISTINCT CASE WHEN COALESCE(spl.luz_con, FALSE) = FALSE THEN l.id_lote END) AS predios_sin_luz,
+    COUNT(DISTINCT CASE WHEN spl.desague_con THEN l.id_lote END) AS predios_con_desague,
+    COUNT(DISTINCT CASE WHEN COALESCE(spl.desague_con, FALSE) = FALSE THEN l.id_lote END) AS predios_sin_desague,
+    COUNT(DISTINCT CASE WHEN spl.telefono_con THEN l.id_lote END) AS predios_con_telefono,
+    COUNT(DISTINCT CASE WHEN COALESCE(spl.telefono_con, FALSE) = FALSE THEN l.id_lote END) AS predios_sin_telefono,
+    COUNT(DISTINCT CASE WHEN spl.gas_con THEN l.id_lote END) AS predios_con_gas,
+    COUNT(DISTINCT CASE WHEN COALESCE(spl.gas_con, FALSE) = FALSE THEN l.id_lote END) AS predios_sin_gas,
+    COUNT(DISTINCT CASE WHEN spl.internet_con THEN l.id_lote END) AS predios_con_internet,
+    COUNT(DISTINCT CASE WHEN COALESCE(spl.internet_con, FALSE) = FALSE THEN l.id_lote END) AS predios_sin_internet,
+    COUNT(DISTINCT CASE WHEN spl.tvcable_con THEN l.id_lote END) AS predios_con_tvcable,
+    COUNT(DISTINCT CASE WHEN COALESCE(spl.tvcable_con, FALSE) = FALSE THEN l.id_lote END) AS predios_sin_tvcable,
     ST_GeomFromText('POINT (0 0)', 4326) AS geom
 FROM (
     SELECT DISTINCT cod_sector
@@ -118,10 +140,8 @@ FROM (
 ) s
 LEFT JOIN geo.tg_lote l
     ON l.cod_sector = s.cod_sector
-LEFT JOIN catastro.tf_fichas f
-    ON f.id_lote = l.id_lote
-LEFT JOIN catastro.tf_servicios_basicos sb
-    ON sb.id_ficha = f.id_ficha
+LEFT JOIN servicio_por_lote spl
+    ON spl.id_lote = l.id_lote
 GROUP BY s.cod_sector
 ORDER BY s.cod_sector;
 
