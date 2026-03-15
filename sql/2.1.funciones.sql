@@ -1,6 +1,6 @@
 --
 -- FECHA DE CREACIÓN    : 22/10/2024
--- FECHA DE MODIFICACIÓN : 10/03/2026
+-- FECHA DE MODIFICACIÓN : 15/03/2026
 --
 
 -- 01. Lotes con y sin ficha catastral
@@ -86,14 +86,18 @@ ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
 SELECT
 a.gid,
 fp.id_lote,
-substring(e.clasificacion, 1, 2)                        AS codi_clasi,
+CASE
+WHEN substring(e.clasificacion, 1, 2) IN ('01', '02', '03', '04', '05')
+    THEN substring(e.clasificacion, 1, 2)
+ELSE '99'
+END                                                     AS codi_clasi,
 CASE
 WHEN substring(e.clasificacion, 1, 2) = '01' THEN 'CASA HABITACIÓN'
 WHEN substring(e.clasificacion, 1, 2) = '02' THEN 'TIENDA - DEPÓSITO - ALMACÉN'
 WHEN substring(e.clasificacion, 1, 2) = '03' THEN 'PREDIO EN EDIFICIO'
 WHEN substring(e.clasificacion, 1, 2) = '04' THEN 'OTROS'
 WHEN substring(e.clasificacion, 1, 2) = '05' THEN 'TERRENO SIN CONSTRUIR'
-
+ELSE 'OTROS'
 END                                                     AS clasificacion,
 e.area_titulo,
 e.area_verificada,
