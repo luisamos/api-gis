@@ -129,7 +129,7 @@ def por_id_lote():
 
   return jsonify(response), 200
 
-@lotes_bp.route("/tipo-documento", methods=["POST"], strict_slashes=False)
+@lotes_bp.route("/documento", methods=["POST"], strict_slashes=False)
 #@jwt_required()
 def por_tipo_documento():
   data = request.get_json(silent=True) or {}
