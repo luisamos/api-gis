@@ -1,10 +1,10 @@
--- Fecha de creación: 13/09/2023
--- Fecha de actualización: 14/03/2024
+-- Fecha de creación		: 13/09/2023
+-- Fecha de actualización	: 14/03/2024
 
 --
 -- 0. Obtener coordenadas por Lote
 --
-CREATE OR REPLACE FUNCTION geo.obtener_coordenada_lote(pId_lote character varying)
+CREATE OR REPLACE FUNCTION geo.obtener_coordenada_lote(pid_lote character varying)
 RETURNS TABLE(id_lote character varying, x decimal, y decimal, geom geometry) AS
 $BODY$
 BEGIN
@@ -14,8 +14,8 @@ BEGIN
     ROUND(ST_Y((ST_DumpPoints(a.geom)).geom):: decimal, 2) AS y,
 	ST_SetSRID(ST_MakePoint(ST_X((ST_DumpPoints(a.geom)).geom), ST_Y((ST_DumpPoints(a.geom)).geom)), 32718) as geom
 FROM geo.tg_lote a
-WHERE a.id_lote = pId_lote
-LIMIT (SELECT ST_NPoints(b.geom) - 1 FROM geo.tg_lote b WHERE b.id_lote = pId_lote);
+WHERE a.id_lote = pid_lote
+LIMIT (SELECT ST_NPoints(b.geom) - 1 FROM geo.tg_lote b WHERE b.id_lote = pid_lote);
 END;
 $BODY$ LANGUAGE plpgsql;
 
@@ -146,3 +146,105 @@ GROUP BY s.cod_sector
 ORDER BY s.cod_sector;
 
 SELECT * FROM geo.v_reporte_servicio_basico;
+
+--
+-- 3. Clasificación del predio
+--
+DROP VIEW IF EXISTS geo.v_reporte_clasificacion_predio;
+CREATE VIEW geo.v_reporte_clasificacion_predio AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (f.id_lote)
+        f.id_lote,
+        f.id_ficha
+    FROM catastro.tf_fichas f
+    ORDER BY f.id_lote, f.tipo_ficha NULLS LAST, f.id_ficha
+),
+clasificacion_por_lote AS (
+    SELECT
+        fp.id_lote,
+        substring(fi.clasificacion, 1, 2) AS codigo_clasificacion
+    FROM ficha_principal fp
+    LEFT JOIN catastro.tf_fichas_individuales fi
+        ON fi.id_ficha = fp.id_ficha
+)
+SELECT
+    row_number() OVER (ORDER BY s.cod_sector) AS gid,
+    s.cod_sector,
+    COUNT(DISTINCT l.id_lote) AS total_predios,
+    COUNT(DISTINCT CASE WHEN cpl.codigo_clasificacion = '01' THEN l.id_lote END) AS casa_habitacion,
+    COUNT(DISTINCT CASE WHEN cpl.codigo_clasificacion = '02' THEN l.id_lote END) AS tienda_deposito_almacen,
+    COUNT(DISTINCT CASE WHEN cpl.codigo_clasificacion = '03' THEN l.id_lote END) AS predio_en_edificio,
+    COUNT(DISTINCT CASE WHEN cpl.codigo_clasificacion = '04' THEN l.id_lote END) AS otros,
+    COUNT(DISTINCT CASE WHEN cpl.codigo_clasificacion = '05' THEN l.id_lote END) AS terreno_sin_construir,
+    COUNT(DISTINCT CASE
+        WHEN COALESCE(cpl.codigo_clasificacion, '') NOT IN ('01', '02', '03', '04', '05')
+        THEN l.id_lote
+    END) AS sin_clasificacion,
+    ST_GeomFromText('POINT (0 0)', 4326) AS geom
+FROM (
+    SELECT DISTINCT cod_sector
+    FROM geo.tg_lote
+    WHERE cod_sector IS NOT NULL
+) s
+LEFT JOIN geo.tg_lote l
+    ON l.cod_sector = s.cod_sector
+LEFT JOIN clasificacion_por_lote cpl
+    ON cpl.id_lote = l.id_lote
+GROUP BY s.cod_sector
+ORDER BY s.cod_sector;
+
+SELECT * FROM geo.v_reporte_clasificacion_predio;
+
+--
+-- 4. Tipo de persona
+--
+DROP VIEW IF EXISTS geo.v_reporte_tipo_persona;
+CREATE VIEW geo.v_reporte_tipo_persona AS
+WITH ficha_principal AS (
+    SELECT DISTINCT ON (f.id_lote)
+        f.id_lote,
+        f.id_ficha
+    FROM catastro.tf_fichas f
+    ORDER BY f.id_lote, f.tipo_ficha NULLS LAST, f.id_ficha
+),
+titular_principal AS (
+    SELECT DISTINCT ON (t.id_ficha)
+        t.id_ficha,
+        p.tipo_persona
+    FROM catastro.tf_titulares t
+    JOIN catastro.tf_personas p
+        ON p.id_persona = t.id_persona
+    ORDER BY t.id_ficha, t.id_persona
+),
+tipo_persona_por_lote AS (
+    SELECT
+        fp.id_lote,
+        tp.tipo_persona
+    FROM ficha_principal fp
+    LEFT JOIN titular_principal tp
+        ON tp.id_ficha = fp.id_ficha
+)
+SELECT
+    row_number() OVER (ORDER BY s.cod_sector) AS gid,
+    s.cod_sector,
+    COUNT(DISTINCT l.id_lote) AS total_predios,
+    COUNT(DISTINCT CASE WHEN tppl.tipo_persona = '1' THEN l.id_lote END) AS persona_natural,
+    COUNT(DISTINCT CASE WHEN tppl.tipo_persona = '2' THEN l.id_lote END) AS persona_juridica,
+    COUNT(DISTINCT CASE
+        WHEN COALESCE(tppl.tipo_persona, '') NOT IN ('1', '2')
+        THEN l.id_lote
+    END) AS sin_tipo_persona,
+    ST_GeomFromText('POINT (0 0)', 4326) AS geom
+FROM (
+    SELECT DISTINCT cod_sector
+    FROM geo.tg_lote
+    WHERE cod_sector IS NOT NULL
+) s
+LEFT JOIN geo.tg_lote l
+    ON l.cod_sector = s.cod_sector
+LEFT JOIN tipo_persona_por_lote tppl
+    ON tppl.id_lote = l.id_lote
+GROUP BY s.cod_sector
+ORDER BY s.cod_sector;
+
+SELECT * FROM geo.v_reporte_tipo_persona;

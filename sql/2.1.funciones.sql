@@ -113,21 +113,37 @@ ORDER BY 1;
 DROP VIEW IF EXISTS geo.v_tipo_persona;
 CREATE OR REPLACE VIEW geo.v_tipo_persona AS
 WITH ficha_principal AS (
-SELECT DISTINCT ON (b.id_lote)
-b.id_lote,
-b.id_ficha
-FROM catastro.tf_fichas b
-ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
+    SELECT DISTINCT ON (b.id_lote)
+        b.id_lote,
+        b.id_ficha
+    FROM catastro.tf_fichas b
+    ORDER BY b.id_lote, b.tipo_ficha NULLS LAST
+),
+titular_principal AS (
+    SELECT DISTINCT ON (c.id_ficha)
+		c.id_ficha,
+        d.tipo_persona        
+    FROM catastro.tf_titulares c
+    JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
+    ORDER BY c.id_ficha
 )
 SELECT
-a.gid,
-fp.id_lote,
-a.geom
+    a.gid,
+    fp.id_lote,    
+    COALESCE(tp.tipo_persona, '0')  AS tipo_persona,
+    CASE
+        WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
+        WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
+    END AS persona,    
+    a.geom
 FROM geo.tg_lote a
 LEFT JOIN ficha_principal fp   ON a.id_lote = fp.id_lote
+LEFT JOIN titular_principal tp ON fp.id_ficha = tp.id_ficha
 ORDER BY a.gid;
 
-SELECT * FROM geo.v_tipo_persona;
+SELECT tipo_persona FROM geo.v_tipo_persona
+GROUP BY 1
+ORDER BY 1;
 
 -- 05. Tipo de uso
 DROP VIEW IF EXISTS geo.v_tipo_uso;
