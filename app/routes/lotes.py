@@ -10,15 +10,6 @@ from app.models import Ficha, FichaIndividual, Lote, Persona, Titular
 
 lotes_bp = Blueprint("lotes", __name__, url_prefix="/lotes")
 
-TIPOS_DOCUMENTO_PERMITIDOS = {
-  "02": "DNI",
-  "03": "Carnet de identidad de policía nacional",
-  "04": "Carnet de identidad de fuerzas armadas",
-  "05": "Partida de nacimiento",
-  "06": "Pasaporte",
-  "07": "Carnet de extranjería",
-}
-
 def consulta_base_personas():
   return (
     db.session.query(
@@ -130,7 +121,7 @@ def por_id_lote():
   return jsonify(response), 200
 
 @lotes_bp.route("/documento", methods=["POST"], strict_slashes=False)
-#@jwt_required()
+@jwt_required()
 def por_tipo_documento():
   data = request.get_json(silent=True) or {}
   num_doc = (data.get("num_doc") or "").strip()
@@ -167,7 +158,7 @@ def por_tipo_documento():
   ), 200
 
 @lotes_bp.route("/titulares", methods=["POST"], strict_slashes=False)
-#@jwt_required()
+@jwt_required()
 def por_nombres_o_razon_social():
   data = request.get_json(silent=True) or {}
   texto = (data.get("texto") or "").strip()
