@@ -133,35 +133,26 @@ def por_id_lote():
 #@jwt_required()
 def por_tipo_documento():
   data = request.get_json(silent=True) or {}
-  tipo_doc = (data.get("tipo_doc") or "").strip()
+  num_doc = (data.get("num_doc") or "").strip()
 
-  if not tipo_doc:
-    return jsonify({"estado": False, "mensaje": "El parámetro 'tipo_doc' es obligatorio"}), 400
-
-  if tipo_doc not in TIPOS_DOCUMENTO_PERMITIDOS:
-    return jsonify(
-      {
-        "estado": False,
-        "mensaje": "El parámetro 'tipo_doc' no es válido",
-        "tipos_documento_validos": TIPOS_DOCUMENTO_PERMITIDOS,
-      }
-    ), 400
+  if not num_doc:
+    return jsonify({"estado": False, "mensaje": "El parámetro 'num_doc' es obligatorio"}), 400
 
   try:
     rows = (
       consulta_base_personas()
-      .filter(Persona.tipo_doc == tipo_doc)
+      .filter(Persona.nume_doc == num_doc)
       .order_by(Lote.id_lote.asc(), Ficha.id_ficha.asc(), Persona.id_persona.asc())
       .all()
     )
   except SQLAlchemyError as exc:
-    return jsonify({"estado": False, "mensaje": "Error consultando por tipo de documento", "detalle": str(exc)}), 500
+    return jsonify({"estado": False, "mensaje": "Error consultando por número de documento", "detalle": str(exc)}), 500
 
   return jsonify(
     {
       "estado": True,
-      "tipo_doc": tipo_doc,
-      "descripcion_tipo_doc": TIPOS_DOCUMENTO_PERMITIDOS[tipo_doc],
+      "num_doc": num_doc,
+      "tiene_propietario": len(filas_unicas(rows)) > 0,
       "total": len(filas_unicas(rows)),
       "resultados": [
         {
