@@ -10,7 +10,7 @@ WITH fichas_lote AS (
     SELECT DISTINCT ON (b.id_lote)
         b.id_lote,
         b.id_ficha,
-        c.imagen_lote,
+        c. ,
         c.area_verificada
     FROM catastro.tf_fichas b
     LEFT JOIN catastro.tf_fichas_individuales c ON b.id_ficha = c.id_ficha

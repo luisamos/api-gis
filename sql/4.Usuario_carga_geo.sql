@@ -1,6 +1,6 @@
 -- Usuario técnico para carga de datos en esquema geo
 -- y solo lectura en esquema catastro (PostgreSQL/PostGIS).
-DROP ROLE usr_carga_geo;
+--DROP ROLE usrgeokaypacha;
 BEGIN;
 
 -- 1) Crear rol/login con contraseña segura (reemplazar por una propia).

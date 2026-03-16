@@ -247,6 +247,7 @@ def puerta_builder(feature, fields, id_usuario, fecha):
   geometry = feature.GetGeometryRef()
   cod_puerta = get_value(feature, fields.get("cod_puerta"))
   esta_puerta = get_value(feature, fields.get("esta_puerta")) or None
+  tipo = get_value(feature, fields.get("tipo")) or None
   id_lote = get_value(feature, fields.get("id_lote")) or None
   wkt_geom = geometry.ExportToWkt() if geometry else None
   return Puerta(
@@ -254,6 +255,7 @@ def puerta_builder(feature, fields, id_usuario, fecha):
     cod_puerta=cod_puerta,
     id_puerta=f"{ID_UBIGEO}{cod_puerta}",
     esta_puerta=esta_puerta,
+    tipo=tipo,
     id_lote=id_lote,
     usuario_crea=id_usuario,
     fecha_crea=fecha,
@@ -385,6 +387,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
       FieldSpec("cod_puerta", length=2, numeric=True),
       FieldSpec("id_lote", required=False),
       FieldSpec("esta_puerta", required=False),
+      FieldSpec("tipo", length=1, required=False),
     ),
     report_key="id_lote",
     model=Puerta,

@@ -20,6 +20,7 @@ class Puerta(db.Model):
   id_lote = db.Column(db.String(14))
   id_puerta = db.Column(db.String(20))
   esta_puerta = db.Column(db.String(1))
+  tipo = db.Column(db.String(1))
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POINT", srid=32719))
@@ -34,6 +35,7 @@ class PuertaHistorico(db.Model):
   id_lote = db.Column(db.String(14))
   id_puerta = db.Column(db.String(20))
   esta_puerta = db.Column(db.String(1))
+  tipo = db.Column(db.String(1))
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
   geom = db.Column(Geometry(geometry_type="POINT", srid=32719))
@@ -48,6 +50,7 @@ class PuertaHistorico(db.Model):
       id_lote = p.id_lote,
       id_puerta = p.id_puerta,
       esta_puerta = p.esta_puerta,
+      tipo = p.tipo,
       usuario_crea = p.usuario_crea,
       fecha_crea = p.fecha_crea,
       geom = p.geom,

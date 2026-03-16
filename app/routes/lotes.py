@@ -14,7 +14,6 @@ def consulta_base_personas():
   return (
     db.session.query(
       Lote.id_lote,
-      Ficha.nume_ficha.label("numero_ficha"),
       FichaIndividual.id_ficha.label("id_ficha_individual"),
       Persona.tipo_doc,
       Persona.nume_doc,
@@ -77,7 +76,7 @@ def filas_unicas(rows):
   filas = []
   vistos = set()
   for row in rows:
-    clave = (row.id_lote, row.numero_ficha, row.id_ficha_individual, *clave_persona(row))
+    clave = (row.id_lote, row.id_ficha_individual, *clave_persona(row))
     if clave in vistos:
       continue
     vistos.add(clave)
@@ -108,12 +107,11 @@ def por_id_lote():
     return jsonify({"estado": False, "mensaje": "Error consultando predio", "detalle": str(exc)}), 500
 
   if not rows:
-    return jsonify({"estado": True, "idlote": id_lote, "numero_ficha": None, "id_ficha_individual": None, "datos_personales": []}), 200
+    return jsonify({"estado": True, "idlote": id_lote, "id_ficha_individual": None, "datos_personales": []}), 200
 
   response = {
     "estado": True,
     "idlote": id_lote,
-    "numero_ficha": rows[0].numero_ficha,
     "id_ficha_individual": rows[0].id_ficha_individual,
     "datos_personales": personas_sin_duplicados(rows, incluir_numerador=True),
   }
@@ -148,7 +146,6 @@ def por_tipo_documento():
       "resultados": [
         {
           "idlote": row.id_lote,
-          "numero_ficha": row.numero_ficha,
           "id_ficha_individual": row.id_ficha_individual,
           **mapear_persona(row),
         }
@@ -200,7 +197,6 @@ def por_nombres_o_razon_social():
       "resultados": [
         {
           "idlote": row.id_lote,
-          "numero_ficha": row.numero_ficha,
           "id_ficha_individual": row.id_ficha_individual,
           **mapear_persona(row),
         }
