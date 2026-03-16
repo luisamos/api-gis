@@ -15,6 +15,7 @@ def consulta_base_personas():
     db.session.query(
       Lote.id_lote,
       FichaIndividual.id_ficha.label("id_ficha_individual"),
+      FichaIndividual.imagen_lote,
       Persona.tipo_doc,
       Persona.nume_doc,
       Persona.tipo_persona,
@@ -73,15 +74,41 @@ def personas_sin_duplicados(rows, incluir_numerador=False):
   return personas
 
 def filas_unicas(rows):
-  filas = []
-  vistos = set()
+  filas_por_clave = {}
   for row in rows:
-    clave = (row.id_lote, row.id_ficha_individual, *clave_persona(row))
-    if clave in vistos:
+    clave_base = (row.id_lote, *clave_persona(row))
+    existente = filas_por_clave.get(clave_base)
+
+    if existente is None:
+      filas_por_clave[clave_base] = row
       continue
-    vistos.add(clave)
-    filas.append(row)
-  return filas
+
+    if existente.id_ficha_individual is None and row.id_ficha_individual is not None:
+      filas_por_clave[clave_base] = row
+      continue
+
+    if existente.id_ficha_individual is None and row.id_ficha_individual is None:
+      if not existente.imagen_lote and row.imagen_lote:
+        filas_por_clave[clave_base] = row
+
+  return list(filas_por_clave.values())
+
+def mapear_resultados(rows):
+  resultados = []
+  for row in filas_unicas(rows):
+    if row.id_ficha_individual is None:
+      continue
+
+    resultados.append(
+      {
+        "idlote": row.id_lote,
+        "id_ficha_individual": row.id_ficha_individual,
+        "imagen_lote": row.imagen_lote,
+        **mapear_persona(row),
+      }
+    )
+
+  return resultados
 
 @lotes_bp.route("/", methods=["POST"], strict_slashes=False)
 @jwt_required()
@@ -131,26 +158,21 @@ def por_tipo_documento():
     rows = (
       consulta_base_personas()
       .filter(Persona.nume_doc == num_doc)
-      .order_by(Lote.id_lote.asc(), Ficha.id_ficha.asc(), Persona.id_persona.asc())
+      .order_by(Persona.nume_doc.asc(), Lote.id_lote.asc(), Ficha.id_ficha.asc(), Persona.id_persona.asc())
       .all()
     )
   except SQLAlchemyError as exc:
     return jsonify({"estado": False, "mensaje": "Error consultando por número de documento", "detalle": str(exc)}), 500
 
+  resultados = mapear_resultados(rows)
+
   return jsonify(
     {
       "estado": True,
       "num_doc": num_doc,
-      "tiene_propietario": len(filas_unicas(rows)) > 0,
-      "total": len(filas_unicas(rows)),
-      "resultados": [
-        {
-          "idlote": row.id_lote,
-          "id_ficha_individual": row.id_ficha_individual,
-          **mapear_persona(row),
-        }
-        for row in filas_unicas(rows)
-      ],
+      "tiene_propietario": len(resultados) > 0,
+      "total": len(resultados),
+      "resultados": resultados,
     }
   ), 200
 
@@ -183,24 +205,19 @@ def por_nombres_o_razon_social():
     rows = (
       consulta_base_personas()
       .filter(or_(nombres_completos.ilike(patron), Persona.razon_social.ilike(patron)))
-      .order_by(Lote.id_lote.asc(), Ficha.id_ficha.asc(), Persona.id_persona.asc())
+      .order_by(Persona.nume_doc.asc(), Lote.id_lote.asc(), Ficha.id_ficha.asc(), Persona.id_persona.asc())
       .all()
     )
   except SQLAlchemyError as exc:
     return jsonify({"estado": False, "mensaje": "Error consultando por nombres o razón social", "detalle": str(exc)}), 500
 
+  resultados = mapear_resultados(rows)
+
   return jsonify(
     {
       "estado": True,
       "texto_busqueda": texto,
-      "total": len(filas_unicas(rows)),
-      "resultados": [
-        {
-          "idlote": row.id_lote,
-          "id_ficha_individual": row.id_ficha_individual,
-          **mapear_persona(row),
-        }
-        for row in filas_unicas(rows)
-      ],
+      "total": len(resultados),
+      "resultados": resultados,
     }
   ), 200
