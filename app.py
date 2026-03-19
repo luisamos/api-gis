@@ -7,10 +7,10 @@ app = create_app()
 
 if __name__ == "__main__":
   if IS_DEV:
-    print("[DESAROLLO] - MDW | API-GIS")
+    print("[DESAROLLO] - GEOKAYPACHA | ALLPA | API-GIS")
 
   else:
-    print("MDW | API-GIS")
+    print("GEOKAYPACHA | ALLPA | API-GIS")
 
   app.run(
     port=5000,

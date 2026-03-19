@@ -10,7 +10,7 @@ WITH fichas_lote AS (
     SELECT DISTINCT ON (b.id_lote)
         b.id_lote,
         b.id_ficha,
-        c. ,
+        c.imagen_lote,
         c.area_verificada
     FROM catastro.tf_fichas b
     LEFT JOIN catastro.tf_fichas_individuales c ON b.id_ficha = c.id_ficha
@@ -126,19 +126,19 @@ WITH ficha_principal AS (
 titular_principal AS (
     SELECT DISTINCT ON (c.id_ficha)
 		c.id_ficha,
-        d.tipo_persona        
+        d.tipo_persona
     FROM catastro.tf_titulares c
     JOIN catastro.tf_personas d ON c.id_persona = d.id_persona
     ORDER BY c.id_ficha
 )
 SELECT
     a.gid,
-    fp.id_lote,    
+    fp.id_lote,
     COALESCE(tp.tipo_persona, '0')  AS tipo_persona,
     CASE
         WHEN tp.tipo_persona = '1' THEN 'PERSONA NATURAL'
         WHEN tp.tipo_persona = '2' THEN 'PERSONA JURIDICA'
-    END AS persona,    
+    END AS persona,
     a.geom
 FROM geo.tg_lote a
 LEFT JOIN ficha_principal fp   ON a.id_lote = fp.id_lote
