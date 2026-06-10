@@ -1,0 +1,8 @@
+venv
+venv/*
+__pycache__/
+*.pyc
+migrations/
+app/__pycache__/
+app/models/__pycache__/
+app/routes/__pycache__/
