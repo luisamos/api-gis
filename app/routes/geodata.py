@@ -430,6 +430,38 @@ def resolve_table(payload: dict) -> Optional[TableDefinition]:
     return None
   return TABLE_DEFINITIONS.get(table_name)
 
+def serializar_spec(spec: FieldSpec) -> dict:
+  """Convierte un FieldSpec en metadatos legibles para el cliente.
+
+  Es la fuente única de verdad de los campos obligatorios para la carga; el
+  visor consume esto para construir su "manual" sin duplicar reglas.
+  """
+  return {
+    "campo": spec.key,
+    "etiqueta": spec.key.upper(),
+    "obligatorio": spec.required,
+    "tipo": "numerico" if spec.numeric else "texto",
+    "digitos": spec.length,
+    "descripcion": _descripcion_spec(spec),
+  }
+
+def _descripcion_spec(spec: FieldSpec) -> str:
+  tipo = "numérico" if spec.numeric else "texto"
+  if spec.length:
+    detalle = f"{tipo} de {spec.length} dígito{'s' if spec.length != 1 else ''}"
+  else:
+    detalle = f"{tipo} (longitud variable)"
+  obligatoriedad = "obligatorio" if spec.required else "opcional"
+  return f"Campo {obligatoriedad}, {detalle}."
+
+def serializar_tabla(table_def: TableDefinition) -> dict:
+  return {
+    "tabla": table_def.name,
+    "geometria": table_def.geom_keyword,
+    "srid": table_def.srid,
+    "campos": [serializar_spec(spec) for spec in table_def.specs],
+  }
+
 def resolve_fields(layer, payload: dict, specs: Iterable[FieldSpec]):
   field_map: Dict[str, str] = {}
   missing_required = []
@@ -681,6 +713,32 @@ def inicio():
       "estado": True,
       "mensaje": f"API - GIS (geoCatastro) - {hoy}"
     }), 200
+
+@geodata_bp.route("/campos_tabla", methods=["GET"])
+@geodata_bp.route("/campos_tabla/<tabla>", methods=["GET"])
+@jwt_required()
+def campos_tabla(tabla: Optional[str] = None):
+  """Devuelve los campos obligatorios/opcionales de una o todas las tablas.
+
+  Sirve como "manual dinámico" para el visor: nombre del campo, tipo, número de
+  dígitos permitidos y si es obligatorio. Se deriva de TABLE_DEFINITIONS, la
+  fuente única de las reglas de carga.
+  """
+  _, estado = validar_token()
+  if not estado:
+    return jsonify({"estado": False}), 401
+
+  if tabla is None:
+    return jsonify({
+      "estado": True,
+      "tablas": [serializar_tabla(td) for td in TABLE_DEFINITIONS.values()],
+    }), 200
+
+  table_def = TABLE_DEFINITIONS.get(tabla)
+  if table_def is None:
+    return jsonify({"estado": False, "mensaje": f"Tabla no reconocida: {tabla}"}), 404
+
+  return jsonify({"estado": True, "tabla": serializar_tabla(table_def)}), 200
 
 def validar_token():
   try:
