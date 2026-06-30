@@ -13,6 +13,11 @@ from sqlalchemy import func, select, text
 
 from app.config import IS_DEV, SRID
 from app.extensions import db
+from app.helpers.import_jobs import (
+  ESTADO_COMPLETADO,
+  ESTADO_ERROR,
+  import_jobs,
+)
 from app.models import (
   Sector,
   SectorHistorico,
@@ -527,49 +532,27 @@ def move_to_history(existing: list, historico_model, id_usuario, fecha):
       db.session.delete(record)
 
 # ---------------------------------------------------------------------------
-# Job tracking for async imports
-# ---------------------------------------------------------------------------
-
-_import_jobs: Dict[str, dict] = {}
-_jobs_lock = threading.Lock()
-
-def _create_job(job_id: str) -> None:
-  with _jobs_lock:
-    _import_jobs[job_id] = {
-      "estado": "procesando",
-      "mensaje": "Importación iniciada",
-      "total": 0,
-      "procesados": 0,
-      "insertados": 0,
-      "historico": 0,
-    }
-
-def _update_job(job_id: str, **kwargs) -> None:
-  with _jobs_lock:
-    if job_id in _import_jobs:
-      _import_jobs[job_id].update(kwargs)
-
-def _get_job(job_id: str) -> Optional[dict]:
-  with _jobs_lock:
-    job = _import_jobs.get(job_id)
-    return dict(job) if job else None
-
-# ---------------------------------------------------------------------------
 # Background import worker
 # ---------------------------------------------------------------------------
+
+# Frecuencia (en nº de features) con la que se reporta el avance de lectura.
+_LECTURA_INTERVALO_REPORTE = 250
+# Banda de porcentaje reservada a la fase de lectura del shapefile.
+_LECTURA_PORCENTAJE_MIN = 5
+_LECTURA_PORCENTAJE_MAX = 50
 
 def _run_import(app, job_id: str, table_def: TableDefinition, shapefile_path, fields: dict, id_usuario: int) -> None:
   with app.app_context():
     try:
-      _update_job(job_id, mensaje="Leyendo shapefile...")
+      import_jobs.actualizar(job_id, mensaje="Leyendo shapefile...", porcentaje=_LECTURA_PORCENTAJE_MIN)
 
       datasource, layer = open_shapefile_layer(shapefile_path)
       if datasource is None or layer is None:
-        _update_job(job_id, estado="error", mensaje="No se pudo abrir el Shapefile")
+        import_jobs.finalizar(job_id, estado=ESTADO_ERROR, mensaje="No se pudo abrir el Shapefile")
         return
 
       total = layer.GetFeatureCount()
-      _update_job(job_id, total=total)
+      import_jobs.actualizar(job_id, total=total)
 
       fecha = datetime.utcnow()
       delete_values: set[str] = set()
@@ -577,6 +560,7 @@ def _run_import(app, job_id: str, table_def: TableDefinition, shapefile_path, fi
 
       layer.ResetReading()
       feature = layer.GetNextFeature()
+      leidos = 0
       while feature is not None:
         value = get_value(feature, fields.get(table_def.delete_key))
         if value:
@@ -585,12 +569,28 @@ def _run_import(app, job_id: str, table_def: TableDefinition, shapefile_path, fi
         key = getattr(nuevo, table_def.record_key, None)
         if key:
           incoming[key] = nuevo
+        leidos += 1
+        if total and leidos % _LECTURA_INTERVALO_REPORTE == 0:
+          avance = _LECTURA_PORCENTAJE_MIN + round(
+            leidos / total * (_LECTURA_PORCENTAJE_MAX - _LECTURA_PORCENTAJE_MIN)
+          )
+          import_jobs.actualizar(
+            job_id,
+            mensaje=f"Leyendo shapefile... ({leidos}/{total})",
+            porcentaje=avance,
+          )
         feature = layer.GetNextFeature()
 
       layer = None
       datasource = None
 
-      _update_job(job_id, procesados=len(incoming), mensaje="Comparando con datos existentes...")
+      import_jobs.actualizar(
+        job_id,
+        procesados=len(incoming),
+        total=total,
+        mensaje="Comparando con datos existentes...",
+        porcentaje=_LECTURA_PORCENTAJE_MAX,
+      )
 
       historico_registros = 0
       insertados = 0
@@ -621,7 +621,11 @@ def _run_import(app, job_id: str, table_def: TableDefinition, shapefile_path, fi
             to_insert.append(incoming[key])
 
         if geom_check_pairs:
-          _update_job(job_id, mensaje=f"Verificando {len(geom_check_pairs)} geometrías...")
+          import_jobs.actualizar(
+            job_id,
+            mensaje=f"Verificando {len(geom_check_pairs)} geometrías...",
+            porcentaje=70,
+          )
           geom_unchanged = batch_geom_unchanged(table_def, geom_check_pairs)
           for pair_key, _ in geom_check_pairs:
             if pair_key not in geom_unchanged:
@@ -630,19 +634,33 @@ def _run_import(app, job_id: str, table_def: TableDefinition, shapefile_path, fi
 
         historico_registros = len(to_archive_gids)
         if to_archive_gids:
-          _update_job(job_id, mensaje=f"Archivando {historico_registros} registros históricos...")
+          import_jobs.actualizar(
+            job_id,
+            mensaje=f"Archivando {historico_registros} registros históricos...",
+            historico=historico_registros,
+            porcentaje=85,
+          )
           to_archive = existing_records_by_gids(table_def, to_archive_gids)
           move_to_history(to_archive, table_def.historico_model, id_usuario, fecha)
 
         insertados = len(to_insert)
         if to_insert:
-          _update_job(job_id, mensaje=f"Insertando {insertados} registros nuevos...")
+          import_jobs.actualizar(
+            job_id,
+            mensaje=f"Insertando {insertados} registros nuevos...",
+            insertados=insertados,
+            porcentaje=95,
+          )
           db.session.add_all(to_insert)
 
-      _update_job(
+      mensaje_final = (
+        f"Carga finalizada: {insertados} registros insertados"
+        f", {historico_registros} enviados al histórico"
+      )
+      import_jobs.finalizar(
         job_id,
-        estado="completado",
-        mensaje="Datos migrados exitosamente",
+        estado=ESTADO_COMPLETADO,
+        mensaje=mensaje_final,
         insertados=insertados,
         historico=historico_registros,
         procesados=total,
@@ -650,7 +668,7 @@ def _run_import(app, job_id: str, table_def: TableDefinition, shapefile_path, fi
 
     except Exception as exc:
       current_app.logger.exception("Error en importación en segundo plano")
-      _update_job(job_id, estado="error", mensaje=f"Error al procesar los datos: {exc}")
+      import_jobs.finalizar(job_id, estado=ESTADO_ERROR, mensaje=f"Error al procesar los datos: {exc}")
 
 # ---------------------------------------------------------------------------
 
@@ -867,7 +885,7 @@ def cargar_shapefile():
     return jsonify({"estado": False, "mensaje": "La información de validación es incompleta"}), 400
 
   job_id = str(uuid.uuid4())
-  _create_job(job_id)
+  import_jobs.crear(job_id, mensaje="Importación iniciada en segundo plano")
 
   app = current_app._get_current_object()
   thread = threading.Thread(
@@ -886,7 +904,7 @@ def estado_carga(job_id):
   if not estado:
     return jsonify({"estado": False}), 401
 
-  job = _get_job(job_id)
+  job = import_jobs.obtener(job_id)
   if job is None:
     return jsonify({"estado": False, "mensaje": "Trabajo no encontrado"}), 404
 
