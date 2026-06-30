@@ -1,6 +1,7 @@
 from datetime import datetime
 from sqlalchemy import Sequence
 from geoalchemy2 import Geometry
+from app.config import SRID
 from app.extensions import db
 
 class Lote(db.Model):
@@ -25,7 +26,7 @@ class Lote(db.Model):
   cuc = db.Column(db.String(12))
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
-  geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
+  geom = db.Column(Geometry(geometry_type="POLYGON", srid=SRID))
 
 class LoteHistorico(db.Model):
   __tablename__ = "tgh_lote"
@@ -45,7 +46,7 @@ class LoteHistorico(db.Model):
   cuc = db.Column(db.String(12))
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
-  geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
+  geom = db.Column(Geometry(geometry_type="POLYGON", srid=SRID))
   usuario_modifica = db.Column(db.Integer, nullable=False)
   fecha_modifica = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 

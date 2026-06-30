@@ -19,6 +19,7 @@ APP_HOST = os.getenv('APP_HOST')
 DEV_FRONTEND_ORIGIN = os.getenv('DEV_FRONTEND_ORIGIN')
 
 ID_UBIGEO = os.getenv('ID_UBIGEO')
+SRID = int(os.getenv('SRID', '32719'))
 DEBUG = env_to_bool(os.getenv('DEBUG'), default=False)
 JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
 

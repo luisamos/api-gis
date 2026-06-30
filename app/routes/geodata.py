@@ -11,7 +11,7 @@ from flask import Blueprint, current_app, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request, get_jwt
 from sqlalchemy import func, select, text
 
-from app.config import IS_DEV
+from app.config import IS_DEV, SRID
 from app.extensions import db
 from app.models import (
   Sector,
@@ -270,7 +270,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "Sector": TableDefinition(
     name="Sector",
     geom_keyword="POLYGON",
-    srid=32719,
+    srid=SRID,
     specs=(FieldSpec("cod_sector", length=2, numeric=True),),
     report_key="cod_sector",
     model=Sector,
@@ -283,7 +283,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "Manzana": TableDefinition(
     name="Manzana",
     geom_keyword="POLYGON",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_sector", length=2, numeric=True),
       FieldSpec("cod_mzna", length=3, numeric=True),
@@ -299,7 +299,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "Lote": TableDefinition(
     name="Lote",
     geom_keyword="POLYGON",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_sector", length=2, numeric=True),
       FieldSpec("cod_mzna", length=3, numeric=True),
@@ -317,7 +317,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "EjeVia": TableDefinition(
     name="EjeVia",
     geom_keyword="LINE",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_sector", length=2, numeric=True, required=True),
       FieldSpec("cod_via", length=6, numeric=True),
@@ -334,7 +334,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "HabilitacionUrbana": TableDefinition(
     name="HabilitacionUrbana",
     geom_keyword="POLYGON",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_hab_urb", length=4, numeric=True),
       FieldSpec("tipo_hab_urb", required=False),
@@ -351,7 +351,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "Comercio": TableDefinition(
     name="Comercio",
     geom_keyword="POLYGON",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_piso", length=2, numeric=True),
       FieldSpec("cod_lote", length=3, numeric=True),
@@ -368,7 +368,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "Construccion": TableDefinition(
     name="Construccion",
     geom_keyword="POLYGON",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_piso", length=2, numeric=True),
       FieldSpec("id_lote", required=True),
@@ -385,7 +385,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "Parque": TableDefinition(
     name="Parque",
     geom_keyword="POLYGON",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_parque", length=2, numeric=True),
       FieldSpec("id_lote", required=True),
@@ -402,7 +402,7 @@ TABLE_DEFINITIONS: Dict[str, TableDefinition] = {
   "Puerta": TableDefinition(
     name="Puerta",
     geom_keyword="POINT",
-    srid=32719,
+    srid=SRID,
     specs=(
       FieldSpec("cod_puerta", length=2, numeric=True),
       FieldSpec("id_lote", required=False),

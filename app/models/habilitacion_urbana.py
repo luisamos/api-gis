@@ -3,6 +3,7 @@ from datetime import datetime
 from geoalchemy2 import Geometry
 from sqlalchemy import Sequence
 
+from app.config import SRID
 from app.extensions import db
 
 class HabilitacionUrbana(db.Model):
@@ -26,7 +27,7 @@ class HabilitacionUrbana(db.Model):
   peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
-  geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
+  geom = db.Column(Geometry(geometry_type="POLYGON", srid=SRID))
 
 class HabilitacionUrbanaHistorico(db.Model):
   __tablename__ = "tgh_hab_urb"
@@ -45,7 +46,7 @@ class HabilitacionUrbanaHistorico(db.Model):
   peri_grafi = db.Column(db.Float)
   usuario_crea = db.Column(db.Integer)
   fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
-  geom = db.Column(Geometry(geometry_type="POLYGON", srid=32719))
+  geom = db.Column(Geometry(geometry_type="POLYGON", srid=SRID))
   usuario_modifica = db.Column(db.Integer, nullable=False)
   fecha_modifica = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
