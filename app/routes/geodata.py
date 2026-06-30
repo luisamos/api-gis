@@ -495,7 +495,7 @@ def batch_geom_unchanged(table_def: TableDefinition, pairs: list[tuple[str, str]
   table_name = table_def.model.__tablename__
   sql = text(
     f"SELECT v.rk, ST_Equals(t.geom, ST_GeomFromText(v.wkt, :srid)) AS igual "
-    f"FROM unnest(:keys::text[], :wkts::text[]) AS v(rk, wkt) "
+    f"FROM unnest(CAST(:keys AS text[]), CAST(:wkts AS text[])) AS v(rk, wkt) "
     f"LEFT JOIN {schema}.{table_name} t ON t.{table_def.record_key} = v.rk"
   )
   rows = db.session.execute(sql, {"keys": keys, "wkts": wkts, "srid": table_def.srid}).all()
