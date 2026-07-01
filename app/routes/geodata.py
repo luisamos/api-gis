@@ -4,6 +4,7 @@ import threading
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Dict, Iterable, Optional, Type
 
@@ -465,6 +466,25 @@ def serializar_tabla(table_def: TableDefinition) -> dict:
     "campos": [serializar_spec(spec) for spec in table_def.specs],
   }
 
+# TABLE_DEFINITIONS es estático durante toda la vida del proceso: solo cambia
+# si se modifica el código y se reinicia el servicio. Por eso la serialización
+# se cachea en memoria (se calcula una única vez por nombre de tabla) en vez
+# de recalcularse en cada request a /campos_tabla.
+@lru_cache(maxsize=None)
+def _serializar_tabla_cacheada(nombre_tabla: str) -> dict:
+  return serializar_tabla(TABLE_DEFINITIONS[nombre_tabla])
+
+@lru_cache(maxsize=1)
+def _serializar_todas_las_tablas_cacheada() -> tuple:
+  return tuple(_serializar_tabla_cacheada(nombre) for nombre in TABLE_DEFINITIONS)
+
+# Cuánto tiempo puede el navegador reutilizar la respuesta sin volver a
+# pedirla (además de la caché en memoria del servidor). Al ser datos
+# estáticos, un valor alto es seguro; se invalida solo reiniciando el
+# servicio tras un cambio de código. "private": el endpoint exige JWT, así
+# que no debe guardarse en cachés compartidas (proxy/CDN) entre usuarios.
+_CAMPOS_TABLA_CACHE_CONTROL = "private, max-age=86400"
+
 def resolve_fields(layer, payload: dict, specs: Iterable[FieldSpec]):
   field_map: Dict[str, str] = {}
   missing_required = []
@@ -732,16 +752,19 @@ def campos_tabla(tabla: Optional[str] = None):
     return jsonify({"estado": False}), 401
 
   if tabla is None:
-    return jsonify({
+    respuesta = jsonify({
       "estado": True,
-      "tablas": [serializar_tabla(td) for td in TABLE_DEFINITIONS.values()],
-    }), 200
+      "tablas": list(_serializar_todas_las_tablas_cacheada()),
+    })
+    respuesta.headers["Cache-Control"] = _CAMPOS_TABLA_CACHE_CONTROL
+    return respuesta, 200
 
-  table_def = TABLE_DEFINITIONS.get(tabla)
-  if table_def is None:
+  if tabla not in TABLE_DEFINITIONS:
     return jsonify({"estado": False, "mensaje": f"Tabla no reconocida: {tabla}"}), 404
 
-  return jsonify({"estado": True, "tabla": serializar_tabla(table_def)}), 200
+  respuesta = jsonify({"estado": True, "tabla": _serializar_tabla_cacheada(tabla)})
+  respuesta.headers["Cache-Control"] = _CAMPOS_TABLA_CACHE_CONTROL
+  return respuesta, 200
 
 def validar_token():
   try:
