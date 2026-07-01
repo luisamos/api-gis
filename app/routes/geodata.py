@@ -440,6 +440,9 @@ def serializar_spec(spec: FieldSpec) -> dict:
     "campo": spec.key,
     "etiqueta": spec.key.upper(),
     "obligatorio": spec.required,
+    # 'numerico' es la fuente confiable (booleano); 'tipo' se mantiene por
+    # compatibilidad con clientes previos.
+    "numerico": spec.numeric,
     "tipo": "numerico" if spec.numeric else "texto",
     "digitos": spec.length,
     "descripcion": _descripcion_spec(spec),
