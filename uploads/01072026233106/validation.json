@@ -1,0 +1,8 @@
+{
+  "validado": true,
+  "fields": {
+    "cod_sector": "cod_sector"
+  },
+  "tabla": "Sector",
+  "fechaValidacion": "2026-07-02T04:31:06.360601"
+}

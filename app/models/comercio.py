@@ -1,0 +1,62 @@
+from datetime import datetime
+
+from geoalchemy2 import Geometry
+from sqlalchemy import Sequence
+
+from app.config import SRID
+from app.extensions import db
+
+class Comercio(db.Model):
+  __tablename__ = "tg_comercio"
+  __table_args__ = {"schema": "geo"}
+
+  gid = db.Column(
+      db.Integer,
+      Sequence("tg_comercio_gid_seq", schema="geo"),
+      primary_key=True,
+      autoincrement=True,
+  )
+  id_ubigeo = db.Column(db.String(6))
+  cod_piso = db.Column(db.String(2))
+  cod_lote = db.Column(db.String(3))
+  id_uni_cat = db.Column(db.String(23))
+  area_grafi = db.Column(db.Float)
+  peri_grafi = db.Column(db.Float)
+  usuario_crea = db.Column(db.Integer)
+  fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
+  geom = db.Column(Geometry(geometry_type="POLYGON", srid=SRID))
+
+class ComercioHistorico(db.Model):
+  __tablename__ = "tgh_comercio"
+  __table_args__ = {"schema": "geo"}
+
+  id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+  gid = db.Column(db.Integer)
+  id_ubigeo = db.Column(db.String(6))
+  cod_piso = db.Column(db.String(2))
+  cod_lote = db.Column(db.String(3))
+  id_uni_cat = db.Column(db.String(23))
+  area_grafi = db.Column(db.Float)
+  peri_grafi = db.Column(db.Float)
+  usuario_crea = db.Column(db.Integer)
+  fecha_crea = db.Column(db.DateTime, default=datetime.utcnow)
+  geom = db.Column(Geometry(geometry_type="POLYGON", srid=SRID))
+  usuario_modifica = db.Column(db.Integer, nullable=False)
+  fecha_modifica = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+
+  @classmethod
+  def from_comercio(cls, c, usuario_modifica, fecha_modifica):
+    return cls(
+      gid = c.gid,
+      id_ubigeo = c.id_ubigeo,
+      cod_piso = c.cod_piso,
+      cod_lote = c.cod_lote,
+      id_uni_cat = c.id_uni_cat,
+      area_grafi = c.area_grafi,
+      peri_grafi = c.peri_grafi,
+      usuario_crea = c.usuario_crea,
+      fecha_crea = c.fecha_crea,
+      geom = c.geom,
+      usuario_modifica=usuario_modifica,
+      fecha_modifica=fecha_modifica,
+    )
